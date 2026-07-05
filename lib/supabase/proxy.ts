@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { publicEnv } from "@/lib/env";
 
 /** Routes that require an authenticated session. */
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"];
 
 /** Auth routes that a logged-in user should be bounced away from. */
 const AUTH_ROUTES = ["/login", "/accept-invite"];

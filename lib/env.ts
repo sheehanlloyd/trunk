@@ -31,6 +31,18 @@ export const publicEnv = {
 } as const;
 
 /**
+ * Emails allowed to use the operator-only onboarding tool, parsed from the
+ * comma-separated `OPERATOR_EMAILS` var. Lowercased for case-insensitive
+ * comparison. Empty when unset — which means no one can onboard, failing safe.
+ */
+export function operatorEmails(): string[] {
+  return (process.env.OPERATOR_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length > 0);
+}
+
+/**
  * Server-only config. Access properties on demand so that unset future-phase
  * secrets don't throw until a feature that needs them is actually used.
  */
