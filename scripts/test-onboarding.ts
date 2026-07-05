@@ -32,7 +32,7 @@ function loadEnvLocal(): void {
       ) {
         value = value.slice(1, -1);
       }
-      if (key && process.env[key] === undefined) process.env[key] = value;
+      if (key && !process.env[key]) process.env[key] = value;
     }
   } catch {
     // No .env.local — rely on the ambient environment.
