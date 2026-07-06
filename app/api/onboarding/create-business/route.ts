@@ -4,6 +4,7 @@ import { getOperator } from "@/lib/auth/operator";
 import { buildEmbedCode, PHONE_NUMBER_PLACEHOLDER } from "@/lib/onboarding/embed";
 import type { OnboardingDraft } from "@/lib/onboarding/types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { provisionNumber } from "@/lib/twilio/client";
 import type { ServiceItem } from "@/lib/types/database";
 
 export const runtime = "nodejs";
@@ -128,9 +129,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Provision a real Twilio voice number and store it (design §7 step 4).
+  // Best-effort: if Twilio is unconfigured or the purchase fails, the business
+  // still goes live and this can be retried — onboarding never hard-fails on it.
+  const phoneNumber = await provisionNumber(business.id);
+  if (phoneNumber) {
+    await supabase
+      .from("businesses")
+      .update({ phone_number: phoneNumber })
+      .eq("id", business.id);
+  }
+
   return NextResponse.json({
     businessId: business.id,
     embedCode: buildEmbedCode(business.id),
+    phoneNumber, // string (E.164) when provisioned, else null
     phoneNumberPlaceholder: PHONE_NUMBER_PLACEHOLDER,
   });
 }

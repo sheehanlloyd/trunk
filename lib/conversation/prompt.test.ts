@@ -22,6 +22,7 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     average_job_value_cents: null,
     notification_preferences: { channels: ["sms"], daily_digest: true },
     grace_period_ends_at: null,
+    call_routing_mode: "direct",
     created_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
@@ -45,6 +46,23 @@ describe("buildConversationSystemPrompt", () => {
     expect(prompt).toContain("Rapid Flow Plumbing");
     expect(prompt).toContain("## Booking");
     expect(prompt).toContain("## Rules");
+  });
+
+  it("adds voice-specific spoken-language rules only on the voice channel", () => {
+    const voice = buildConversationSystemPrompt(makeBusiness(), "voice");
+    const chat = buildConversationSystemPrompt(makeBusiness(), "chat");
+    // Voice must instruct digit-by-digit read-back and one-question-at-a-time.
+    expect(voice).toContain("## Channel — phone call");
+    expect(voice.toLowerCase()).toContain("digit by digit");
+    expect(voice.toLowerCase()).toContain("one question at a time");
+    // Chat gets none of that.
+    expect(chat).not.toContain("digit by digit");
+    expect(chat).toContain("website chat widget");
+  });
+
+  it("biases toward escalating when an emergency is uncertain (both channels)", () => {
+    const prompt = buildConversationSystemPrompt(makeBusiness(), "voice");
+    expect(prompt.toLowerCase()).toContain("treat it as one");
   });
 
   it("omits the corrections section when there are none", () => {

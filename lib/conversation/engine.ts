@@ -174,11 +174,17 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
 
   // Imported lazily so this module's pure helpers (decide, mergeOutcome, …)
   // stay importable in unit tests without eager env validation.
-  const { CLAUDE_MODEL, getAnthropic } = await import("@/lib/ai/anthropic");
+  const { CLAUDE_MODEL, VOICE_CLAUDE_MODEL, getAnthropic } = await import(
+    "@/lib/ai/anthropic"
+  );
   const anthropic = getAnthropic();
+  // Voice is a live phone call — a caller is waiting in silence — so use the
+  // faster model and a tighter token budget to cut per-turn latency. Chat keeps
+  // the larger model. (Phase 6 latency tradeoff.)
+  const isVoice = input.channel === "voice";
   const response = await anthropic.messages.parse({
-    model: CLAUDE_MODEL,
-    max_tokens: 1024,
+    model: isVoice ? VOICE_CLAUDE_MODEL : CLAUDE_MODEL,
+    max_tokens: isVoice ? 256 : 1024,
     system: buildConversationSystemPrompt(business, input.channel, corrections),
     messages: toMessages(withUser),
     output_config: { format: zodOutputFormat(TurnAnalysisSchema) },
@@ -233,6 +239,47 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
     aiConfidenceFlag: conversation.ai_confidence_flag || decision.aiConfidenceFlag,
   });
 
+  // Instant owner notifications (design §12: instant for bookings and
+  // emergencies; general activity goes to the daily digest). Fired on the
+  // TRANSITION only — an emergency that was already escalated on a prior turn
+  // won't re-alert — so this is idempotent across a multi-turn call. Shared by
+  // chat and voice. Notifications are best-effort and never fail the turn.
+  const emergencyEscalatedNow =
+    decision.outcome === "emergency_escalated" &&
+    conversation.outcome !== "emergency_escalated";
+  if (emergencyEscalatedNow || bookingId) {
+    try {
+      const { notifyOwner } = await import("@/lib/notifications/send");
+      if (emergencyEscalatedNow) {
+        await notifyOwner({
+          business,
+          reason: "emergency",
+          subject: `🚨 EMERGENCY call — ${business.name}`,
+          body:
+            `A caller just reported an emergency` +
+            (customerPhone ? ` (callback: ${customerPhone})` : "") +
+            `. Follow your emergency policy now: ` +
+            `${business.emergency_policy?.trim() || "contact the caller immediately"}.`,
+        });
+      } else if (bookingId) {
+        await notifyOwner({
+          business,
+          reason: "booking",
+          subject: `New booking — ${details.name || "customer"}`,
+          body:
+            `New job booked by your AI receptionist: ` +
+            `${details.service || "service TBD"}` +
+            (details.preferredTime ? `, ${details.preferredTime}` : "") +
+            `. Contact ${details.name || "the customer"}` +
+            (customerPhone ? ` at ${customerPhone}` : "") +
+            `. Open your dashboard to confirm.`,
+        });
+      }
+    } catch (err) {
+      console.error("[engine] owner notification failed", err);
+    }
+  }
+
   return {
     conversationId: conversation.id,
     reply: analysis.reply,
@@ -240,5 +287,6 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
     bookingId,
     emergency: analysis.emergency_detected,
     aiConfidenceFlag: conversation.ai_confidence_flag || decision.aiConfidenceFlag,
+    needsClarification: analysis.needs_clarification,
   };
 }

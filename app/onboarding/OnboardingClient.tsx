@@ -19,6 +19,8 @@ interface HourRow {
 interface CreateResult {
   businessId: string;
   embedCode: string;
+  /** Real provisioned Twilio number (E.164), or null if provisioning didn't run. */
+  phoneNumber: string | null;
   phoneNumberPlaceholder: string;
 }
 
@@ -499,9 +501,13 @@ function DoneStep({
 
       <Card className="p-6">
         <SectionTitle>Phone number</SectionTitle>
-        <p className="text-sm text-slate-700">{result.phoneNumberPlaceholder}</p>
+        <p className="text-sm text-slate-700">
+          {result.phoneNumber ?? result.phoneNumberPlaceholder}
+        </p>
         <p className="mt-1 text-xs text-[--color-muted]">
-          A real Twilio number is provisioned in a later phase.
+          {result.phoneNumber
+            ? "This Twilio number is live — calls are answered by the AI receptionist."
+            : "A Twilio number will be assigned when Twilio is configured."}
         </p>
       </Card>
 

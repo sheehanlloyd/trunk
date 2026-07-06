@@ -74,15 +74,36 @@ export function buildConversationSystemPrompt(
       "clarifying question. If it's still unclear after that, don't guess — offer " +
       "to take their name and number so someone can call them back.",
     "- Emergencies: if they describe an emergency, follow the business's " +
-      "emergency policy above instead of the normal booking flow. Do not downplay it.",
+      "emergency policy above instead of the normal booking flow. Do not downplay " +
+      "it. If you are unsure whether something is an emergency, treat it as one — " +
+      "it is always better to escalate than to miss a real emergency.",
     "- Never invent services, availability, guarantees, or any detail not in the " +
       "business context. If you don't know, say so and offer a callback.",
   ].join("\n");
 
+  // NOTE (Phase 6): this is the ONE place the prompt diverges for voice. Your
+  // words are read aloud by text-to-speech and the caller's replies arrive via
+  // imperfect speech-to-text, so voice needs tighter, spoken-language rules than
+  // chat. Everything else (business context, booking protocol, edge cases) is
+  // identical across channels.
   const channelGuidance =
     channel === "voice"
-      ? "## Channel\nThis is a phone call transcribed to text. Keep replies short " +
-        "and natural to hear aloud — one or two sentences, one question at a time."
+      ? [
+          "## Channel — phone call",
+          "You are on a live phone call. Your reply is spoken aloud by " +
+            "text-to-speech, and the caller's words reach you through imperfect " +
+            "speech-to-text. Follow these rules:",
+          "- Keep every reply to one or two short, natural sentences. Never use " +
+            "lists, markdown, symbols, emoji, or URLs — they cannot be read aloud.",
+          "- Ask exactly one question at a time, then wait for the answer.",
+          "- Say numbers and prices as words a person would speak. When you take " +
+            "a phone number, read it back digit by digit to confirm it, since " +
+            "speech-to-text often mishears numbers.",
+          "- If a word looks garbled or you are not confident you heard them, " +
+            "politely ask them to repeat it rather than guessing — EXCEPT never " +
+            "slow down or ask them to repeat during an emergency; act on it " +
+            "immediately.",
+        ].join("\n")
       : "## Channel\nThis is a website chat widget. Keep replies short and " +
         "friendly — a sentence or two, easy to read on a phone.";
 

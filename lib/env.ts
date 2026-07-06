@@ -41,6 +41,15 @@ export function billingGracePeriodDays(): number {
 }
 
 /**
+ * Whether to verify the X-Twilio-Signature on the voice webhooks. These are
+ * public endpoints that trigger owner notifications, so validation MUST be on in
+ * production. Defaults off so local/simulated webhook POSTs work in development.
+ */
+export function validateTwilioSignature(): boolean {
+  return process.env.TWILIO_VALIDATE_SIGNATURE === "true";
+}
+
+/**
  * Emails allowed to use the operator-only onboarding tool, parsed from the
  * comma-separated `OPERATOR_EMAILS` var. Lowercased for case-insensitive
  * comparison. Empty when unset — which means no one can onboard, failing safe.

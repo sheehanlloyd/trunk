@@ -24,6 +24,10 @@ export interface TurnResult {
   /** True when emergency language was detected — Phase 6 fires a priority alert. */
   emergency: boolean;
   aiConfidenceFlag: boolean;
+  /** Per-turn (not sticky): the request was still unclear after the AI's one
+   *  clarifying question this turn. Voice uses this to drive the 2-attempt
+   *  voicemail fallback without the sticky outcome/confidence flags poisoning it. */
+  needsClarification: boolean;
 }
 
 /**

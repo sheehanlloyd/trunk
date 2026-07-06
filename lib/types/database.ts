@@ -25,6 +25,9 @@ export type ConversationOutcome =
 
 export type BookingStatus = "new" | "confirmed" | "owner_contacted" | "canceled";
 
+/** How a business's phone calls reach the AI (see 0008_voice.sql). */
+export type CallRoutingMode = "direct" | "forward";
+
 export type NotificationType = "sms" | "email";
 
 export type NotificationStatus = "sent" | "failed";
@@ -69,6 +72,8 @@ export interface Business {
   /** When set, the business is in a billing grace window (past_due) that ends
    *  at this time; after it passes the business moves to `paused`. */
   grace_period_ends_at: string | null;
+  /** How inbound phone calls reach the AI (see 0008_voice.sql). */
+  call_routing_mode: CallRoutingMode;
   created_at: string;
 }
 
