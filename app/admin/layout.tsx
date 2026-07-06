@@ -18,8 +18,8 @@ export default async function AdminLayout({
   if (!operator) redirect("/dashboard");
 
   return (
-    <div className="min-h-dvh bg-[--color-background]">
-      <header className="border-b border-[--color-border] bg-[--color-surface]">
+    <div className="min-h-dvh bg-background">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-brand-700">
@@ -33,7 +33,7 @@ export default async function AdminLayout({
             <Link href="/onboarding" className="text-slate-600 hover:text-slate-900">
               Onboarding
             </Link>
-            <span className="text-[--color-muted]">{operator.email}</span>
+            <span className="text-muted">{operator.email}</span>
           </nav>
         </div>
       </header>

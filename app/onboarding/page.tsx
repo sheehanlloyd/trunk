@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
   if (!operator) redirect("/dashboard");
 
   return (
-    <main className="min-h-dvh bg-[--color-background]">
+    <main className="min-h-dvh bg-background">
       <OnboardingClient operatorEmail={operator.email} />
     </main>
   );

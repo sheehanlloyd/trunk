@@ -91,7 +91,7 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
         { role: "assistant", text: data.reply ?? "" },
       ]);
     } catch {
-      setError("Network error — please try again.");
+      setError("Hmm, that didn't go through — mind trying again?");
     } finally {
       setLoading(false);
     }
@@ -116,9 +116,24 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-[var(--color-surface)] shadow-2xl sm:rounded-2xl sm:border sm:border-[var(--color-border)]">
       {/* Header */}
       <div className="flex items-center justify-between bg-brand-600 px-4 py-3 text-white">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{businessName}</p>
-          <p className="text-xs text-brand-100">We typically reply in a moment</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-bold uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {businessName.trim().charAt(0) || "A"}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{businessName}</p>
+            <p className="flex items-center gap-1.5 text-xs text-brand-100">
+              <span
+                aria-hidden
+                className="inline-block h-1.5 w-1.5 rounded-full bg-revenue-200"
+              />
+              We typically reply in a moment
+            </p>
+          </div>
         </div>
         <button
           type="button"
@@ -140,9 +155,11 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
         ))}
         {loading && <TypingIndicator />}
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl border border-copper-200 bg-copper-50 px-3.5 py-2 text-sm text-copper-700">
+              {error}
+            </div>
+          </div>
         )}
       </div>
 

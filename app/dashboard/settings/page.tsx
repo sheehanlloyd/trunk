@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { InstallCard } from "@/components/dashboard/InstallCard";
 import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
 import { SettingsForm } from "@/components/dashboard/SettingsForm";
 import { Button } from "@/components/shared/Button";
 import { PageLayout } from "@/components/shared/PageLayout";
 import { requireAuth } from "@/lib/auth/session";
+import { buildEmbedCode } from "@/lib/onboarding/embed";
 
 export const metadata: Metadata = {
   title: "Knowledge & Settings — AI Receptionist",
@@ -27,6 +29,10 @@ export default async function SettingsPage() {
       }
     >
       <div className="space-y-6">
+        <InstallCard
+          embedCode={buildEmbedCode(business.id)}
+          phoneNumber={business.phone_number}
+        />
         <SettingsForm business={business} />
         <NotificationPreferencesForm prefs={business.notification_preferences} />
       </div>

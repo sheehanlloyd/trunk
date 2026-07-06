@@ -35,7 +35,7 @@ export default async function KnowledgePage() {
             <CardTitle>Add a correction</CardTitle>
           </CardHeader>
           <CardBody>
-            <p className="mb-4 text-sm text-[--color-muted]">
+            <p className="mb-4 text-sm text-muted">
               Tell your AI what to say differently. The fastest way is the
               “Correct this answer” button inside any conversation — but you can
               add one here too.
@@ -50,7 +50,7 @@ export default async function KnowledgePage() {
           </h2>
           {corrections.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-sm text-[--color-muted]">
+              <p className="text-sm text-muted">
                 No corrections yet. When your AI gets something wrong, correct it
                 here or from a conversation and it&apos;ll learn immediately.
               </p>
@@ -68,7 +68,7 @@ export default async function KnowledgePage() {
                     <p className="mt-1 text-sm font-medium text-slate-900">
                       {c.corrected_content}
                     </p>
-                    <p className="mt-2 text-xs text-[--color-muted]">
+                    <p className="mt-2 text-xs text-muted">
                       Added {formatDate(c.created_at)}
                     </p>
                   </Card>

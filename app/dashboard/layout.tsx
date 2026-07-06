@@ -25,7 +25,7 @@ export default async function DashboardLayout({
           <h1 className="text-lg font-semibold text-slate-900">
             No business associated
           </h1>
-          <p className="mt-2 text-sm text-[--color-muted]">
+          <p className="mt-2 text-sm text-muted">
             Your account isn&apos;t linked to a business yet. Please contact your
             platform operator to be invited, then sign in again.
           </p>

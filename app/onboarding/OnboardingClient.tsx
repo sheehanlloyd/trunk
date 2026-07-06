@@ -226,7 +226,7 @@ function UrlStep({
       <h2 className="text-base font-semibold text-slate-900">
         Prospect website
       </h2>
-      <p className="mt-1 text-sm text-[--color-muted]">
+      <p className="mt-1 text-sm text-muted">
         We&apos;ll scrape the visible text and draft their services, hours, and
         service area. Nothing is saved until you confirm.
       </p>
@@ -239,7 +239,7 @@ function UrlStep({
           onKeyDown={(e) => {
             if (e.key === "Enter" && url.trim() && !loading) onScrape();
           }}
-          className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
         <Button
           onClick={onScrape}
@@ -302,7 +302,7 @@ function ReviewStep({
 
   return (
     <div className="max-w-3xl space-y-4">
-      <p className="text-sm text-[--color-muted]">
+      <p className="text-sm text-muted">
         Draft from{" "}
         <span className="font-medium text-slate-700">{sourceUrl}</span>. Review
         and correct everything below — this is what the AI will know.
@@ -347,7 +347,7 @@ function ReviewStep({
           />
         </div>
         {(contact.phone || contact.address) && (
-          <p className="mt-3 text-xs text-[--color-muted]">
+          <p className="mt-3 text-xs text-muted">
             Scraped contact info:{" "}
             {[contact.phone, contact.address].filter(Boolean).join(" · ")}
           </p>
@@ -360,7 +360,7 @@ function ReviewStep({
           {edit.services.map((s, i) => (
             <div
               key={i}
-              className="grid grid-cols-1 gap-2 rounded-lg border border-[--color-border] p-3 sm:grid-cols-[1fr_1fr_140px_auto]"
+              className="grid grid-cols-1 gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_1fr_140px_auto]"
             >
               <BareInput
                 placeholder="Service"
@@ -434,7 +434,7 @@ function ReviewStep({
           onChange={(e) => update({ emergencyPolicy: e.target.value })}
           rows={3}
           placeholder="e.g. 24/7 emergency line for burst pipes; otherwise take a message."
-          className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
       </Card>
 
@@ -449,7 +449,7 @@ function ReviewStep({
         </Button>
       </div>
       {!canSubmit && (
-        <p className="text-right text-xs text-[--color-muted]">
+        <p className="text-right text-xs text-muted">
           A business name and valid owner email are required.
         </p>
       )}
@@ -504,7 +504,7 @@ function DoneStep({
         <p className="text-sm text-slate-700">
           {result.phoneNumber ?? result.phoneNumberPlaceholder}
         </p>
-        <p className="mt-1 text-xs text-[--color-muted]">
+        <p className="mt-1 text-xs text-muted">
           {result.phoneNumber
             ? "This Twilio number is live — calls are answered by the AI receptionist."
             : "A Twilio number will be assigned when Twilio is configured."}
@@ -524,7 +524,7 @@ function DoneStep({
 // --- Small shared field components ------------------------------------------
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[--color-muted]">
+    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
       {children}
     </h3>
   );
@@ -563,10 +563,10 @@ function TextField({
           "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-brand-100 " +
           (invalid
             ? "border-red-400 focus:border-red-400"
-            : "border-[--color-border] focus:border-brand-500")
+            : "border-border focus:border-brand-500")
         }
       />
-      {hint && <span className="mt-1 block text-xs text-[--color-muted]">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }
@@ -586,7 +586,7 @@ function BareInput({
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
     />
   );
 }

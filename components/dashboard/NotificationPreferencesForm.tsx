@@ -60,7 +60,7 @@ export function NotificationPreferencesForm({
             </label>
           </fieldset>
 
-          <label className="flex min-h-11 items-center gap-3 border-t border-[--color-border] pt-3 text-sm text-slate-900">
+          <label className="flex min-h-11 items-center gap-3 border-t border-border pt-3 text-sm text-slate-900">
             <input
               type="checkbox"
               name="daily_digest"

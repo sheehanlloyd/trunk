@@ -37,7 +37,7 @@ export function CorrectAnswerButton({ answer }: { answer: string }) {
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-[--color-border] bg-white p-3">
+    <div className="mt-3 rounded-lg border border-border bg-white p-3">
       <CorrectionForm
         originalContent={answer}
         submitLabel="Save correction"
@@ -46,7 +46,7 @@ export function CorrectAnswerButton({ answer }: { answer: string }) {
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="mt-2 text-xs font-medium text-[--color-muted] hover:text-slate-700"
+        className="mt-2 text-xs font-medium text-muted hover:text-slate-700"
       >
         Cancel
       </button>

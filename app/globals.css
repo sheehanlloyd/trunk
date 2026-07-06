@@ -2,41 +2,134 @@
 
 /*
  * Design tokens for the AI Receptionist dashboard.
- * Trustworthy / calm palette: blue primary, emerald accent (money & success),
- * neutral gray surfaces. Light-first, mobile-responsive. Registering the
- * scales in @theme exposes utilities like bg-brand-600, text-accent-700, etc.
+ *
+ * Identity is grounded in the trades' own world — steel + water (a deep petrol
+ * blue), copper pipe/wiring (a warm accent), and blueprint grays — rather than
+ * default framework blue. Saturation is spent in one place: revenue green, used
+ * only for money and positive outcomes. Calm and trustworthy per DESIGN.md §13,
+ * elevated through a chosen palette, a real type pairing, and considered depth.
+ * Light-first, mobile-responsive. Registering scales in @theme exposes utilities
+ * like bg-brand-600, text-revenue-600, shadow-card, etc.
  */
 @theme {
-  /* Brand — blue: buttons, links, active nav */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
+  /* Brand — deep petrol/ink blue: buttons, links, active nav.
+     Steel + water: trustworthy, industrial, not stock #2563eb. */
+  --color-brand-50: #eef5f7;
+  --color-brand-100: #d6e6ea;
+  --color-brand-200: #aecdd5;
+  --color-brand-300: #7dabb7;
+  --color-brand-400: #4d8794;
+  --color-brand-500: #2a6b7a;
+  --color-brand-600: #0e4c5e;
+  --color-brand-700: #0b3d4c;
+  --color-brand-800: #0a323d;
+  --color-brand-900: #082832;
 
-  /* Accent — emerald: revenue, bookings, positive status */
-  --color-accent-50: #ecfdf5;
-  --color-accent-100: #d1fae5;
-  --color-accent-200: #a7f3d0;
-  --color-accent-500: #10b981;
-  --color-accent-600: #059669;
-  --color-accent-700: #047857;
+  /* Revenue — emerald: the ONE saturated accent, reserved for money &
+     positive status. This is what "worth $199/mo" looks like on screen. */
+  --color-revenue-50: #e9f6f0;
+  --color-revenue-100: #cfece0;
+  --color-revenue-200: #a3dcc4;
+  --color-revenue-500: #12996d;
+  --color-revenue-600: #0a7a57;
+  --color-revenue-700: #086046;
+
+  /* Copper — warm accent (pipe/wiring): attention & emphasis. Replaces amber;
+     subject-specific warmth against the cool brand, not the AI terracotta trope. */
+  --color-copper-50: #f9f0e9;
+  --color-copper-100: #f1dccb;
+  --color-copper-200: #e3bd9d;
+  --color-copper-600: #b5713f;
+  --color-copper-700: #8f5730;
+
+  /* Accent alias kept so any lingering accent-* utilities resolve to revenue. */
+  --color-accent-50: var(--color-revenue-50);
+  --color-accent-100: var(--color-revenue-100);
+  --color-accent-200: var(--color-revenue-200);
+  --color-accent-500: var(--color-revenue-500);
+  --color-accent-600: var(--color-revenue-600);
+  --color-accent-700: var(--color-revenue-700);
+
+  /* Blueprint neutrals — cool grays biased toward the brand, not pure slate. */
+  --color-ink-50: #f2f5f6;
+  --color-ink-100: #e4eaec;
+  --color-ink-200: #cdd7db;
+  --color-ink-300: #a7b6bc;
+  --color-ink-400: #74868d;
+  --color-ink-500: #566970;
+  --color-ink-600: #41525a;
+  --color-ink-700: #33424a;
+  --color-ink-800: #222e34;
+  --color-ink-900: #16202a;
 
   /* Semantic surfaces */
-  --color-background: #f8fafc; /* app canvas — slate-50 */
-  --color-surface: #ffffff; /* cards, panels */
-  --color-foreground: #0f172a; /* slate-900 */
-  --color-muted: #64748b; /* slate-500 */
-  --color-border: #e2e8f0; /* slate-200 */
+  --color-background: #f6f8f9;   /* app canvas — faint cool tint */
+  --color-surface: #ffffff;      /* cards, panels */
+  --color-foreground: #16202a;   /* ink-900 */
+  --color-muted: #566970;        /* ink-500 — clears AA on white (4.5:1+) */
+  --color-border: #dbe3e6;       /* cool blueprint hairline */
+
+  /* Considered elevation scale — replaces a single flat shadow. */
+  --shadow-card: 0 1px 2px rgb(16 32 42 / 0.04), 0 1px 3px rgb(16 32 42 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(16 32 42 / 0.05), 0 6px 16px rgb(16 32 42 / 0.08);
+  --shadow-hero: 0 1px 2px rgb(10 122 87 / 0.06), 0 12px 32px rgb(14 76 94 / 0.10);
+
+  /* Fonts — wired to the next/font variables set on <html> in layout.tsx.
+     --font-display drives headings & metrics (Archivo), --font-sans the body
+     (Geist). Both fall back to system-ui so a font load never blocks text. */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-archivo), var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Metrics & display headings use the industrial grotesk with lined-up digits. */
+.font-display {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Sparkline draw-in: the line strokes on, the endpoint dot pops after. */
+.spark-animate .spark-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: spark-draw 900ms ease-out forwards;
+}
+.spark-animate .spark-dot {
+  opacity: 0;
+  animation: spark-pop 300ms ease-out 850ms forwards;
+}
+@keyframes spark-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes spark-pop {
+  from { opacity: 0; transform: scale(0.2); transform-origin: center; }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Gentle rise for the hero on first paint. */
+.rise-in {
+  animation: rise-in 500ms ease-out both;
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Motion is a flourish, never a dependency: honor the OS setting. */
+@media (prefers-reduced-motion: reduce) {
+  .spark-animate .spark-line,
+  .spark-animate .spark-dot,
+  .rise-in {
+    animation: none;
+  }
+  .spark-animate .spark-line { stroke-dashoffset: 0; }
+  .spark-animate .spark-dot { opacity: 1; }
 }

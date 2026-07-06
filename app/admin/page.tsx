@@ -97,7 +97,7 @@ export default async function AdminClientsPage() {
       <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
         Clients
       </h1>
-      <p className="mt-1 text-sm text-[--color-muted]">
+      <p className="mt-1 text-sm text-muted">
         Every business and its billing status at a glance.
       </p>
 
@@ -111,7 +111,7 @@ export default async function AdminClientsPage() {
             </span>
           </span>
         ))}
-        <span className="ml-auto text-sm text-[--color-muted]">
+        <span className="ml-auto text-sm text-muted">
           {clients.length} total
         </span>
       </div>
@@ -119,7 +119,7 @@ export default async function AdminClientsPage() {
       <Card className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-[--color-border] text-left text-xs font-medium uppercase tracking-wide text-[--color-muted]">
+            <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wide text-muted">
               <th className="px-4 py-3">Business</th>
               <th className="px-4 py-3">Owner</th>
               <th className="px-4 py-3">Status</th>
@@ -132,12 +132,12 @@ export default async function AdminClientsPage() {
             {clients.map((c) => (
               <tr
                 key={c.id}
-                className="border-b border-[--color-border] last:border-0"
+                className="border-b border-border last:border-0"
               >
                 <td className="px-4 py-3 font-medium text-slate-900">
                   {c.name}
                 </td>
-                <td className="px-4 py-3 text-[--color-muted]">
+                <td className="px-4 py-3 text-muted">
                   {c.owner_email}
                 </td>
                 <td className="px-4 py-3">
@@ -155,7 +155,7 @@ export default async function AdminClientsPage() {
                     ? formatDate(c.grace_period_ends_at)
                     : "—"}
                 </td>
-                <td className="px-4 py-3 text-[--color-muted]">
+                <td className="px-4 py-3 text-muted">
                   {formatDate(c.created_at)}
                 </td>
               </tr>
@@ -165,7 +165,7 @@ export default async function AdminClientsPage() {
       </Card>
 
       {clients.length === 0 ? (
-        <p className="mt-4 text-sm text-[--color-muted]">No clients yet.</p>
+        <p className="mt-4 text-sm text-muted">No clients yet.</p>
       ) : null}
     </div>
   );

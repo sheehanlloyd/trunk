@@ -21,7 +21,7 @@ const DAYS: { key: string; label: string }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-[--color-border] px-3 py-2 text-sm text-slate-900";
+  "w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-900";
 
 /**
  * The owner's self-service control over what the AI knows (design §6/§11). One
@@ -80,7 +80,7 @@ export function SettingsForm({ business }: { business: Business }) {
               placeholder="e.g. Austin, TX (25 mi radius)"
               className={inputClass}
             />
-            <span className="mt-1 block text-xs text-[--color-muted]">
+            <span className="mt-1 block text-xs text-muted">
               Your AI tells customers outside this area you can&apos;t take the job.
             </span>
           </label>
@@ -92,14 +92,14 @@ export function SettingsForm({ business }: { business: Business }) {
           <CardTitle>Services &amp; pricing</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <p className="text-sm text-[--color-muted]">
+          <p className="text-sm text-muted">
             These are the services and price ranges your AI quotes. It only ever
             gives ranges you list here — it never invents a price.
           </p>
           {services.map((s, i) => (
             <div
               key={i}
-              className="space-y-2 rounded-lg border border-[--color-border] p-3"
+              className="space-y-2 rounded-lg border border-border p-3"
             >
               <input
                 value={s.service}
@@ -179,7 +179,7 @@ export function SettingsForm({ business }: { business: Business }) {
         </CardHeader>
         <CardBody>
           <label className="block">
-            <span className="mb-1 block text-sm text-[--color-muted]">
+            <span className="mb-1 block text-sm text-muted">
               How should your AI handle after-hours emergencies?
             </span>
             <textarea
@@ -199,7 +199,7 @@ export function SettingsForm({ business }: { business: Business }) {
         </CardHeader>
         <CardBody>
           <label className="block">
-            <span className="mb-1 block text-sm text-[--color-muted]">
+            <span className="mb-1 block text-sm text-muted">
               Your typical job value. We use this to estimate the revenue your AI
               captures each week.
             </span>
@@ -222,7 +222,7 @@ export function SettingsForm({ business }: { business: Business }) {
         </CardBody>
       </Card>
 
-      <div className="sticky bottom-0 -mx-4 border-t border-[--color-border] bg-[--color-background]/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-4">
+      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-4">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm">
             {state.error ? (

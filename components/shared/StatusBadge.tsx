@@ -8,10 +8,10 @@ import type {
 type Tone = "neutral" | "info" | "success" | "warning" | "danger";
 
 const toneStyles: Record<Tone, string> = {
-  neutral: "bg-slate-100 text-slate-700",
+  neutral: "bg-ink-100 text-ink-700",
   info: "bg-brand-50 text-brand-700",
-  success: "bg-accent-50 text-accent-700",
-  warning: "bg-amber-50 text-amber-700",
+  success: "bg-revenue-50 text-revenue-700",
+  warning: "bg-copper-50 text-copper-700",
   danger: "bg-red-50 text-red-700",
 };
 

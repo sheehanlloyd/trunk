@@ -39,7 +39,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   return (
     <Card className="p-6">
       <h1 className="text-lg font-semibold text-slate-900">Sign in</h1>
-      <p className="mt-1 text-sm text-[--color-muted]">
+      <p className="mt-1 text-sm text-muted">
         Welcome back. Enter your credentials to continue.
       </p>
 
@@ -70,7 +70,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-[--color-muted]">
+      <p className="mt-4 text-center text-sm text-muted">
         Invited but no account yet?{" "}
         <Link
           href="/accept-invite"
@@ -107,7 +107,7 @@ function Field({
         value={value}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       />
     </label>
   );

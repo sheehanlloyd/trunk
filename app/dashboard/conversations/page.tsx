@@ -113,12 +113,12 @@ export default async function ConversationsPage({
     >
       {/* Plain GET form so filtering works even before JS loads. */}
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-xs font-medium text-[--color-muted]">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
           Outcome
           <select
             name="outcome"
             defaultValue={outcome}
-            className="h-11 min-w-40 rounded-lg border border-[--color-border] bg-white px-3 text-sm text-slate-900"
+            className="h-11 min-w-40 rounded-lg border border-border bg-white px-3 text-sm text-slate-900"
           >
             {OUTCOME_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -127,12 +127,12 @@ export default async function ConversationsPage({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-[--color-muted]">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
           Date
           <select
             name="range"
             defaultValue={range}
-            className="h-11 min-w-40 rounded-lg border border-[--color-border] bg-white px-3 text-sm text-slate-900"
+            className="h-11 min-w-40 rounded-lg border border-border bg-white px-3 text-sm text-slate-900"
           >
             {RANGE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -151,13 +151,13 @@ export default async function ConversationsPage({
 
       {rows.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-sm text-[--color-muted]">
+          <p className="text-sm text-muted">
             No conversations match these filters yet.
           </p>
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <ul className="divide-y divide-[--color-border]">
+          <ul className="divide-y divide-border">
             {rows.map((c) => {
               const flagged = c.ai_confidence_flag || c.outcome === "unclear";
               return (
@@ -175,7 +175,7 @@ export default async function ConversationsPage({
                       <p className="truncate text-sm font-medium text-slate-900">
                         {c.customer_name ?? c.customer_phone ?? "Unknown caller"}
                       </p>
-                      <p className="mt-0.5 text-xs text-[--color-muted]">
+                      <p className="mt-0.5 text-xs text-muted">
                         {c.channel === "voice" ? "Call" : "Chat"} ·{" "}
                         {formatDateTime(c.created_at)}
                       </p>
@@ -200,7 +200,7 @@ export default async function ConversationsPage({
         <div className="mt-4 flex justify-center">
           <Link
             href={`/dashboard/conversations?${loadMoreParams.toString()}`}
-            className="rounded-lg border border-[--color-border] bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
           >
             Load more
           </Link>

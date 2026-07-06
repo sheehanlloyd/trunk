@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <p className="text-xl font-bold text-brand-700">AI Receptionist</p>
-          <p className="mt-1 text-sm text-[--color-muted]">
+          <p className="mt-1 text-sm text-muted">
             Dashboard for HVAC, plumbing &amp; electrical pros
           </p>
         </div>

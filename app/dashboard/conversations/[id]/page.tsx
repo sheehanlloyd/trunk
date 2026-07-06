@@ -68,7 +68,7 @@ export default async function ConversationDetailPage({
       {conversation.customer_phone ? (
         <Card className="mb-4 flex items-center justify-between p-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[--color-muted]">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted">
               Customer phone
             </p>
             <p className="mt-0.5 text-sm font-medium text-slate-900">
@@ -86,7 +86,7 @@ export default async function ConversationDetailPage({
 
       <Card className="p-4 sm:p-6">
         {conversation.transcript.length === 0 ? (
-          <p className="text-sm text-[--color-muted]">
+          <p className="text-sm text-muted">
             This conversation has no messages yet.
           </p>
         ) : (
@@ -103,7 +103,7 @@ export default async function ConversationDetailPage({
                       "max-w-[85%] " + (isCustomer ? "" : "flex flex-col items-end")
                     }
                   >
-                    <span className="mb-1 block text-xs font-medium text-[--color-muted]">
+                    <span className="mb-1 block text-xs font-medium text-muted">
                       {isCustomer ? "Customer" : "AI receptionist"}
                     </span>
                     <div

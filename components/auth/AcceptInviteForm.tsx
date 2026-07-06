@@ -60,7 +60,7 @@ export function AcceptInviteForm() {
       <h1 className="text-lg font-semibold text-slate-900">
         Set up your account
       </h1>
-      <p className="mt-1 text-sm text-[--color-muted]">
+      <p className="mt-1 text-sm text-muted">
         Use the email address your invite was sent to.
       </p>
 
@@ -75,7 +75,7 @@ export function AcceptInviteForm() {
             value={email}
             autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
         </label>
         <label className="block">
@@ -88,7 +88,7 @@ export function AcceptInviteForm() {
             value={password}
             autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-[--color-border] bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
         </label>
 
@@ -108,7 +108,7 @@ export function AcceptInviteForm() {
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-[--color-muted]">
+      <p className="mt-4 text-center text-sm text-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-brand-700 hover:underline">
           Sign in

@@ -6,12 +6,12 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-/** Base surface: white panel with border + subtle shadow. Composable. */
+/** Base surface: white panel with border + considered elevation. Composable. */
 export function Card({ className, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm",
+        "rounded-xl border border-border bg-surface shadow-card",
         className,
       )}
       {...props}
@@ -25,7 +25,7 @@ export function CardHeader({ className, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between border-b border-[--color-border] px-5 py-4",
+        "flex items-center justify-between border-b border-border px-5 py-4",
         className,
       )}
       {...props}
@@ -38,7 +38,7 @@ export function CardHeader({ className, children, ...props }: CardProps) {
 export function CardTitle({ className, children, ...props }: CardProps) {
   return (
     <h3
-      className={cn("text-base font-semibold text-slate-900", className)}
+      className={cn("font-display text-base font-semibold text-brand-800", className)}
       {...(props as HTMLAttributes<HTMLHeadingElement>)}
     >
       {children}
@@ -72,17 +72,17 @@ interface StatCardProps {
 export function StatCard({ label, value, hint, tone = "default" }: StatCardProps) {
   return (
     <Card className="p-5">
-      <p className="text-sm font-medium text-[--color-muted]">{label}</p>
+      <p className="text-sm font-medium text-muted">{label}</p>
       <p
         className={cn(
-          "mt-2 text-3xl font-semibold tracking-tight",
-          tone === "accent" ? "text-accent-600" : "text-slate-900",
+          "font-display mt-2 text-3xl font-semibold",
+          tone === "accent" ? "text-revenue-600" : "text-brand-800",
         )}
       >
         {value}
       </p>
       {hint ? (
-        <p className="mt-1 text-sm text-[--color-muted]">{hint}</p>
+        <p className="mt-1 text-sm text-muted">{hint}</p>
       ) : null}
     </Card>
   );

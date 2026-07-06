@@ -20,7 +20,7 @@ type BookingRow = Booking & {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-[--color-muted]">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
       <p className="mt-0.5 text-sm text-slate-900">{value}</p>
@@ -49,7 +49,7 @@ function BookingCard({
             {booking.customer_name ?? "Unknown customer"}
           </p>
           {booking.customer_phone ? (
-            <p className="mt-0.5 text-sm text-[--color-muted]">
+            <p className="mt-0.5 text-sm text-muted">
               {booking.customer_phone}
             </p>
           ) : null}
@@ -73,9 +73,9 @@ function BookingCard({
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-[--color-border] pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
         <BookingStatusControls bookingId={booking.id} status={booking.status} />
-        <div className="flex items-center gap-3 text-xs text-[--color-muted]">
+        <div className="flex items-center gap-3 text-xs text-muted">
           <span>{formatDateTime(booking.created_at)}</span>
           {booking.conversation ? (
             <Link
@@ -131,7 +131,7 @@ export default async function BookingsPage({
     >
       {bookings.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-sm text-[--color-muted]">
+          <p className="text-sm text-muted">
             No bookings yet. When your AI books a job, it shows up here.
           </p>
         </Card>
@@ -155,7 +155,7 @@ export default async function BookingsPage({
 
           {rest.length > 0 ? (
             <section>
-              <h2 className="mb-3 text-sm font-semibold text-[--color-muted]">
+              <h2 className="mb-3 text-sm font-semibold text-muted">
                 Handled
               </h2>
               <div className="space-y-4">
@@ -172,7 +172,7 @@ export default async function BookingsPage({
         <div className="mt-6 flex justify-center">
           <Link
             href={`/dashboard/bookings?limit=${limit + PAGE_SIZE}`}
-            className="rounded-lg border border-[--color-border] bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
           >
             Load more
           </Link>

@@ -89,7 +89,7 @@ export default async function BillingPage({
             <p className="text-sm font-medium text-slate-700">
               Subscription status
             </p>
-            <p className="mt-1 text-sm text-[--color-muted]">
+            <p className="mt-1 text-sm text-muted">
               $500 one-time setup + $199/month
             </p>
           </div>
@@ -97,9 +97,9 @@ export default async function BillingPage({
         </div>
 
         {subscription ? (
-          <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-[--color-border] pt-6 sm:grid-cols-2">
+          <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-6 sm:grid-cols-2">
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-[--color-muted]">
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted">
                 {subscription.cancelAtPeriodEnd ? "Access ends" : "Next renewal"}
               </dt>
               <dd className="mt-1 text-sm text-slate-900">
@@ -110,7 +110,7 @@ export default async function BillingPage({
             </div>
             {subscription.cancelAtPeriodEnd ? (
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-[--color-muted]">
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted">
                   Auto-renew
                 </dt>
                 <dd className="mt-1 text-sm text-slate-900">
@@ -121,7 +121,7 @@ export default async function BillingPage({
           </dl>
         ) : null}
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-[--color-border] pt-6 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row">
           {showStart ? (
             <BillingActionButton
               endpoint="/api/stripe/checkout"
@@ -153,7 +153,7 @@ function Banner({
     success: "border-accent-200 bg-accent-50 text-accent-700",
     warning: "border-amber-300 bg-amber-50 text-amber-800",
     danger: "border-red-300 bg-red-50 text-red-700",
-    neutral: "border-[--color-border] bg-slate-50 text-slate-700",
+    neutral: "border-border bg-slate-50 text-slate-700",
   };
   return (
     <div className={`mb-4 rounded-lg border px-4 py-3 text-sm ${styles[tone]}`}>

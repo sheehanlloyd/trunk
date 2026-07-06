@@ -54,14 +54,14 @@ export function NavBar({ businessName, userEmail }: NavBarProps) {
       <p className="truncate text-sm font-semibold text-slate-900">
         {businessName}
       </p>
-      <p className="truncate text-xs text-[--color-muted]">{userEmail}</p>
+      <p className="truncate text-xs text-muted">{userEmail}</p>
     </div>
   );
 
   return (
     <>
       {/* Mobile top bar */}
-      <header className="flex items-center justify-between border-b border-[--color-border] bg-[--color-surface] px-4 py-3 md:hidden">
+      <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
         {brand}
         <button
           type="button"
@@ -76,22 +76,30 @@ export function NavBar({ businessName, userEmail }: NavBarProps) {
         </button>
       </header>
       {open && (
-        <div className="border-b border-[--color-border] bg-[--color-surface] px-4 py-3 md:hidden">
+        <div className="border-b border-border bg-surface px-4 py-3 md:hidden">
           {links}
-          <div className="mt-3 border-t border-[--color-border] pt-3">
+          <div className="mt-3 border-t border-border pt-3">
             <LogoutButton />
           </div>
         </div>
       )}
 
       {/* Desktop left rail */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-[--color-border] bg-[--color-surface] p-4 md:flex">
-        <div className="px-1 pb-4">
-          <p className="text-lg font-bold text-brand-700">AI Receptionist</p>
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface p-4 md:flex">
+        <div className="flex items-center gap-2 px-1 pb-4">
+          <span
+            aria-hidden
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 font-display text-sm font-bold text-white"
+          >
+            AI
+          </span>
+          <p className="font-display text-lg font-bold text-brand-700">
+            Receptionist
+          </p>
         </div>
         <div className="mb-4 rounded-lg bg-slate-50 p-3">{brand}</div>
         {links}
-        <div className="mt-auto border-t border-[--color-border] pt-3">
+        <div className="mt-auto border-t border-border pt-3">
           <LogoutButton />
         </div>
       </aside>
