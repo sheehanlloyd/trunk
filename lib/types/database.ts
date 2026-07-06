@@ -92,6 +92,19 @@ export interface Booking {
   created_at: string;
 }
 
+export interface Lead {
+  id: string;
+  business_id: string;
+  conversation_id: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  requested_service: string | null;
+  preferred_time: string | null;
+  notes: string | null;
+  reason: string | null;
+  created_at: string;
+}
+
 export interface KnowledgeCorrection {
   id: string;
   business_id: string;
