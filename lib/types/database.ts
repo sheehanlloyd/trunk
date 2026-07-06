@@ -95,6 +95,7 @@ export interface Conversation {
   transcript: ConversationTurn[];
   outcome: ConversationOutcome | null;
   ai_confidence_flag: boolean;
+  call_sid: string | null;
   created_at: string;
 }
 

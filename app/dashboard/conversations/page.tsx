@@ -57,10 +57,13 @@ type ConversationRow = Pick<
   | "created_at"
 >;
 
+/** Page size for "Load more" — also the increment each click adds. */
+const PAGE_SIZE = 50;
+
 export default async function ConversationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ outcome?: string; range?: string }>;
+  searchParams: Promise<{ outcome?: string; range?: string; limit?: string }>;
 }) {
   const context = await requireAuth();
   if (!context) return null;
@@ -68,6 +71,11 @@ export default async function ConversationsPage({
   const params = await searchParams;
   const outcome = params.outcome ?? "all";
   const range = params.range ?? "all";
+  const requestedLimit = Number.parseInt(params.limit ?? "", 10);
+  const limit =
+    Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 5000)
+      : PAGE_SIZE;
 
   const supabase = await createClient();
   let query = supabase
@@ -76,7 +84,9 @@ export default async function ConversationsPage({
       "id, customer_name, customer_phone, outcome, ai_confidence_flag, channel, created_at",
     )
     .order("created_at", { ascending: false })
-    .limit(200);
+    // Fetch one extra row to detect whether there's more beyond this page,
+    // without a separate count query.
+    .range(0, limit);
 
   if (outcome === "attention") {
     query = query.or(ATTENTION_FILTER);
@@ -88,7 +98,13 @@ export default async function ConversationsPage({
   if (start) query = query.gte("created_at", start);
 
   const { data } = await query.returns<ConversationRow[]>();
-  const rows = data ?? [];
+  const hasMore = (data?.length ?? 0) > limit;
+  const rows = (data ?? []).slice(0, limit);
+
+  const loadMoreParams = new URLSearchParams();
+  if (outcome !== "all") loadMoreParams.set("outcome", outcome);
+  if (range !== "all") loadMoreParams.set("range", range);
+  loadMoreParams.set("limit", String(limit + PAGE_SIZE));
 
   return (
     <PageLayout
@@ -179,6 +195,17 @@ export default async function ConversationsPage({
           </ul>
         </Card>
       )}
+
+      {hasMore ? (
+        <div className="mt-4 flex justify-center">
+          <Link
+            href={`/dashboard/conversations?${loadMoreParams.toString()}`}
+            className="rounded-lg border border-[--color-border] bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+          >
+            Load more
+          </Link>
+        </div>
+      ) : null}
     </PageLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { notifyOwner } from "@/lib/notifications/send";
+import { rateLimit } from "@/lib/rateLimit";
 import { assertTwilioRequest } from "@/lib/twilio/signature";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
@@ -29,13 +30,19 @@ export async function POST(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const businessId = searchParams.get("businessId") || "";
   const conversationId = searchParams.get("conversationId") || "";
   const kind = searchParams.get("kind");
+
+  const limit = rateLimit(`voice:recording:${businessId}`, 30, 60_000);
+  if (!limit.allowed) {
+    return twimlResponse(sayAndHangupTwiml("Goodbye."));
+  }
 
   const supabase = createAdminClient();
 
   if (kind === "transcription") {
-    await attachTranscription(supabase, conversationId, params.TranscriptionText ?? "");
+    await attachTranscription(supabase, businessId, conversationId, params.TranscriptionText ?? "");
     // Twilio ignores the response body for a transcribeCallback.
     return new Response(null, { status: 204 });
   }
@@ -44,10 +51,21 @@ export async function POST(request: Request) {
     .from("conversations")
     .select("*")
     .eq("id", conversationId)
+    .eq("business_id", businessId)
     .maybeSingle<Conversation>();
 
   if (!conversation) {
     return twimlResponse(sayAndHangupTwiml("Thanks. Goodbye."));
+  }
+
+  // Idempotency: Twilio retries the <Record action> callback on a slow/failed
+  // response. A retry lands here with the same conversation already flagged
+  // `voicemail_left` — return the same TwiML without re-appending a duplicate
+  // transcript turn or sending a second owner notification.
+  if (conversation.outcome === "voicemail_left") {
+    return twimlResponse(
+      sayAndHangupTwiml("Thanks for your message. Someone will get back to you soon. Goodbye."),
+    );
   }
 
   const recordingUrl = (params.RecordingUrl ?? "").trim();
@@ -57,7 +75,7 @@ export async function POST(request: Request) {
   };
   const fromNumber = (params.From ?? "").trim() || null;
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("conversations")
     .update({
       transcript: [...conversation.transcript, voicemailTurn],
@@ -65,6 +83,10 @@ export async function POST(request: Request) {
       customer_phone: conversation.customer_phone ?? fromNumber,
     })
     .eq("id", conversation.id);
+
+  if (updateError) {
+    console.error("[voice/recording] failed to save voicemail turn", conversation.id, updateError.message);
+  }
 
   // Alert the owner to follow up (normal priority — not an emergency).
   const { data: business } = await supabase
@@ -96,6 +118,7 @@ export async function POST(request: Request) {
 /** Replaces the recording-URL placeholder on the voicemail turn with the text. */
 async function attachTranscription(
   supabase: ReturnType<typeof createAdminClient>,
+  businessId: string,
   conversationId: string,
   text: string,
 ): Promise<void> {
@@ -104,6 +127,7 @@ async function attachTranscription(
     .from("conversations")
     .select("transcript")
     .eq("id", conversationId)
+    .eq("business_id", businessId)
     .maybeSingle<Pick<Conversation, "transcript">>();
   if (!conversation) return;
 
@@ -118,8 +142,12 @@ async function attachTranscription(
       break;
     }
   }
-  await supabase
+  const { error } = await supabase
     .from("conversations")
     .update({ transcript })
     .eq("id", conversationId);
+
+  if (error) {
+    console.error("[voice/recording] failed to attach transcription", conversationId, error.message);
+  }
 }

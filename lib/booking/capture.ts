@@ -64,12 +64,19 @@ function toRow(details: Partial<BookingDetails>) {
 /**
  * Creates a booking row linked to its conversation. Caller must have already
  * validated completeness with `isBookingComplete`. Returns the new booking id.
+ *
+ * At most one booking per conversation (unique index on `conversation_id`,
+ * migration 0009) — so a retried turn (e.g. Twilio re-POSTing the same
+ * `/api/voice/gather` request) that tries to create a second booking for a
+ * conversation that already has one resolves to the existing row instead of
+ * inserting a duplicate. `created: false` tells the caller not to re-fire the
+ * owner notification for a booking that already exists.
  */
 export async function createBooking(args: {
   businessId: string;
   conversationId: string;
   details: BookingDetails;
-}): Promise<{ bookingId: string }> {
+}): Promise<{ bookingId: string; created: boolean }> {
   const { createAdminClient } = await import("@/lib/supabase/admin");
   const supabase = createAdminClient();
   const { data, error } = await supabase
@@ -83,10 +90,25 @@ export async function createBooking(args: {
     .select("id")
     .single<{ id: string }>();
 
-  if (error || !data) {
-    throw new Error(`Failed to create booking: ${error?.message ?? "no row"}`);
+  if (!error && data) {
+    return { bookingId: data.id, created: true };
   }
-  return { bookingId: data.id };
+
+  // 23505 = unique_violation: a booking for this conversation already exists
+  // (a retried webhook delivery). Look it up instead of failing the turn.
+  if (error?.code === "23505") {
+    const { data: existing, error: lookupError } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("conversation_id", args.conversationId)
+      .single<{ id: string }>();
+
+    if (!lookupError && existing) {
+      return { bookingId: existing.id, created: false };
+    }
+  }
+
+  throw new Error(`Failed to create booking: ${error?.message ?? "no row"}`);
 }
 
 /**

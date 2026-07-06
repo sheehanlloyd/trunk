@@ -1,4 +1,5 @@
 import { handleTurn } from "@/lib/conversation/engine";
+import { rateLimit } from "@/lib/rateLimit";
 import { assertTwilioRequest } from "@/lib/twilio/signature";
 import { readTwilioForm, voiceUrl } from "@/lib/voice/http";
 import {
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
   const conversationId = searchParams.get("conversationId") || null;
   const attempts = Number.parseInt(searchParams.get("attempts") ?? "0", 10) || 0;
 
+  // Per-business: each Claude turn costs money, and a call can loop through
+  // many gather turns, so cap turns per business per minute across all calls.
+  const limit = rateLimit(`voice:gather:${businessId}`, 60, 60_000);
+  if (!limit.allowed) {
+    return twimlResponse(
+      sayAndHangupTwiml("We're getting a high volume of calls right now. Please try again shortly."),
+    );
+  }
+
   const speech = (params.SpeechResult ?? "").trim();
   const hasSpeech = speech.length > 0;
 
@@ -68,9 +78,12 @@ export async function POST(request: Request) {
         needsClarification: result.needsClarification,
       };
     } catch (err) {
-      console.error("[voice/gather] handleTurn failed", err);
+      console.error("[voice/gather] handleTurn failed", { businessId, conversationId, error: err instanceof Error ? err.message : String(err) });
       // Treat a model/engine failure like a failed turn: reprompt, or voicemail
-      // at the limit — never loop the caller in a broken state.
+      // at the limit — never loop the caller in a broken state. Set a spoken
+      // fallback so the "clarify" action (which speaks `reply`) doesn't leave
+      // the caller in silence.
+      reply = REPROMPT;
       state = { hasSpeech: true, attempts, emergency: false, needsClarification: true };
     }
   }

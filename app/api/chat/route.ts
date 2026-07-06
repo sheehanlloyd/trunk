@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getBillingState } from "@/lib/billing/lookup";
 import { isPaused } from "@/lib/billing/status";
 import { handleTurn } from "@/lib/conversation/engine";
+import { clientIp, rateLimit, tooManyRequests } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -62,6 +63,17 @@ export async function POST(request: Request) {
   }
   if (message.length > 4000) {
     return json({ error: "message is too long." }, 400);
+  }
+
+  // Rate limit before any DB/model call: per-IP (catches a single abusive
+  // caller) and per-business (catches distributed abuse of one widget/business,
+  // and bounds the LLM/DB cost any one tenant's endpoint can run up).
+  const ip = clientIp(request);
+  const ipLimit = rateLimit(`chat:ip:${ip}`, 20, 60_000);
+  if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds, CORS_HEADERS);
+  const businessLimit = rateLimit(`chat:business:${businessId}`, 60, 60_000);
+  if (!businessLimit.allowed) {
+    return tooManyRequests(businessLimit.retryAfterSeconds, CORS_HEADERS);
   }
 
   // Billing gate (design §10): a paused business (or a past_due one whose grace

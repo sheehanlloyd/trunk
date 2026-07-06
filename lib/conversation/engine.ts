@@ -200,6 +200,7 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
 
   // Apply side effects. Booking creation must succeed before we report "booked".
   let bookingId: string | null = null;
+  let bookingNewlyCreated = false;
   if (decision.createBooking) {
     const created = await createBooking({
       businessId: input.businessId,
@@ -207,6 +208,7 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
       details,
     });
     bookingId = created.bookingId;
+    bookingNewlyCreated = created.created;
     await clearLead(conversation.id); // it converted from lead -> booking
   } else if (decision.leadReason) {
     await upsertLead({
@@ -247,7 +249,8 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
   const emergencyEscalatedNow =
     decision.outcome === "emergency_escalated" &&
     conversation.outcome !== "emergency_escalated";
-  if (emergencyEscalatedNow || bookingId) {
+  const bookingJustCreated = bookingId && bookingNewlyCreated;
+  if (emergencyEscalatedNow || bookingJustCreated) {
     try {
       const { notifyOwner } = await import("@/lib/notifications/send");
       if (emergencyEscalatedNow) {
@@ -261,7 +264,7 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
             `. Follow your emergency policy now: ` +
             `${business.emergency_policy?.trim() || "contact the caller immediately"}.`,
         });
-      } else if (bookingId) {
+      } else if (bookingJustCreated) {
         await notifyOwner({
           business,
           reason: "booking",

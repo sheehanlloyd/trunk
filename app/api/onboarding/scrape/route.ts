@@ -4,6 +4,7 @@ import { getOperator } from "@/lib/auth/operator";
 import { extractDraft } from "@/lib/onboarding/extract";
 import { fetchAndClean } from "@/lib/onboarding/scrape";
 import { ScrapeError } from "@/lib/onboarding/types";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,16 @@ export async function POST(request: Request) {
   const operator = await getOperator();
   if (!operator) {
     return NextResponse.json({ error: "Not authorized." }, { status: 403 });
+  }
+
+  // Each call does an outbound fetch of an arbitrary URL plus an LLM
+  // extraction pass — cap how fast one operator can run those up.
+  const limit = rateLimit(`onboarding:scrape:${operator.email}`, 10, 60_000);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many scrape requests — please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
   }
 
   let url: unknown;

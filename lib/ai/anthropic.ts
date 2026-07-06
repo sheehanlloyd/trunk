@@ -19,13 +19,22 @@ export const CLAUDE_MODEL = "claude-opus-4-6";
 export const VOICE_CLAUDE_MODEL =
   process.env.VOICE_CLAUDE_MODEL?.trim() || "claude-sonnet-4-6";
 
+/**
+ * Hard cap on a single Claude call. Chat/voice callers already catch and fall
+ * back gracefully on any error (see lib/conversation/engine.ts callers), but
+ * without a timeout a hung request holds the request open until the SDK's own
+ * (much longer) default — bad for a live phone call where the caller is
+ * waiting in silence.
+ */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 let client: Anthropic | null = null;
 
 /** Lazily-created Anthropic client. Reads the API key on first use, so the app
  * boots fine before the key is set. Server-only. */
 export function getAnthropic(): Anthropic {
   if (!client) {
-    client = new Anthropic({ apiKey: serverEnv.anthropicApiKey });
+    client = new Anthropic({ apiKey: serverEnv.anthropicApiKey, timeout: REQUEST_TIMEOUT_MS });
   }
   return client;
 }

@@ -68,11 +68,19 @@ export async function getKnowledgeCorrections(
 /**
  * Loads an existing conversation (scoped to the business so one tenant can't
  * read another's transcript) or creates a fresh one. Returns the row either way.
+ *
+ * `callSid` (Twilio's per-call identifier) makes this idempotent for the one
+ * caller that creates voice conversations, `/api/voice/incoming`: Twilio
+ * retries webhook deliveries, and without a lookup key a retry would insert a
+ * second `conversations` row for the same call. When `callSid` is provided
+ * and no `conversationId` is given, this looks up by `call_sid` first and
+ * only inserts on a genuine miss (unique index on `call_sid`, migration 0009).
  */
 export async function loadOrCreateConversation(args: {
   businessId: string;
   conversationId?: string | null;
   channel: ConversationChannel;
+  callSid?: string | null;
 }): Promise<Conversation> {
   const { createAdminClient } = await import("@/lib/supabase/admin");
   const supabase = createAdminClient();
@@ -94,11 +102,26 @@ export async function loadOrCreateConversation(args: {
     return data;
   }
 
+  if (args.callSid) {
+    const { data: existing, error: lookupError } = await supabase
+      .from("conversations")
+      .select("*")
+      .eq("call_sid", args.callSid)
+      .eq("business_id", args.businessId)
+      .maybeSingle<Conversation>();
+
+    if (lookupError) {
+      throw new Error(`Failed to look up conversation by call: ${lookupError.message}`);
+    }
+    if (existing) return existing;
+  }
+
   const { data, error } = await supabase
     .from("conversations")
     .insert({
       business_id: args.businessId,
       channel: args.channel,
+      call_sid: args.callSid ?? null,
       transcript: [],
       outcome: null,
       ai_confidence_flag: false,
@@ -106,10 +129,21 @@ export async function loadOrCreateConversation(args: {
     .select("*")
     .single<Conversation>();
 
-  if (error || !data) {
-    throw new Error(`Failed to create conversation: ${error?.message ?? "no row"}`);
+  if (!error && data) return data;
+
+  // 23505 = unique_violation on call_sid: a concurrent/retried webhook won the
+  // race to insert first. Fetch the row it created instead of failing the call.
+  if (error?.code === "23505" && args.callSid) {
+    const { data: existing, error: lookupError } = await supabase
+      .from("conversations")
+      .select("*")
+      .eq("call_sid", args.callSid)
+      .eq("business_id", args.businessId)
+      .maybeSingle<Conversation>();
+    if (!lookupError && existing) return existing;
   }
-  return data;
+
+  throw new Error(`Failed to create conversation: ${error?.message ?? "no row"}`);
 }
 
 /** Persists the turn's results back onto the conversation row. */

@@ -1,5 +1,6 @@
 import { isPaused } from "@/lib/billing/status";
 import { loadOrCreateConversation } from "@/lib/conversation/persistence";
+import { rateLimit } from "@/lib/rateLimit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertTwilioRequest } from "@/lib/twilio/signature";
 import type { CallRoutingMode, BusinessStatus } from "@/lib/types/database";
@@ -48,6 +49,17 @@ export async function POST(request: Request) {
     );
   }
 
+  // Per-business limit: Twilio calls this from its own infrastructure (shared
+  // across all Twilio customers), so per-IP limiting isn't meaningful here —
+  // scope by the resolved business, once known. Twilio expects TwiML, not
+  // JSON, so a throttled call still gets a valid (if terse) voice response.
+  const limit = rateLimit(`voice:incoming:${business.id}`, 30, 60_000);
+  if (!limit.allowed) {
+    return twimlResponse(
+      sayAndHangupTwiml("We're getting a high volume of calls right now. Please try again shortly."),
+    );
+  }
+
   // Same billing gate as the widget/chat: a paused business doesn't answer.
   if (isPaused(business.status, business.grace_period_ends_at)) {
     return twimlResponse(
@@ -58,9 +70,13 @@ export async function POST(request: Request) {
   }
 
   // Create the conversation now so its id threads through gather + voicemail.
+  // Scoped by CallSid so a Twilio webhook retry reuses the same conversation
+  // instead of creating a duplicate for the same call.
+  const callSid = (params.CallSid ?? "").trim() || null;
   const conversation = await loadOrCreateConversation({
     businessId: business.id,
     channel: "voice",
+    callSid,
   });
 
   const actionUrl = voiceUrl("/api/voice/gather", {

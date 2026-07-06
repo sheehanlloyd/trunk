@@ -73,7 +73,10 @@ export async function POST(request: Request) {
       continue;
     }
 
-    const [{ data: conversations }, { data: leads }] = await Promise.all([
+    const [
+      { data: conversations, error: conversationsError },
+      { data: leads, error: leadsError },
+    ] = await Promise.all([
       supabase
         .from("conversations")
         .select("outcome")
@@ -87,6 +90,18 @@ export async function POST(request: Request) {
         .gte("created_at", since)
         .returns<DigestLead[]>(),
     ]);
+
+    if (conversationsError || leadsError) {
+      // Don't silently send an incomplete ("0 activity") digest built from a
+      // partial query failure — skip this business and let the next run retry.
+      console.error(
+        "[notifications/digest] activity query failed",
+        business.id,
+        (conversationsError ?? leadsError)?.message,
+      );
+      skipped += 1;
+      continue;
+    }
 
     const digest = buildDigest({
       businessName: business.name,

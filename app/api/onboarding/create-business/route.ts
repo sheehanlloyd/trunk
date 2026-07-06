@@ -89,42 +89,25 @@ export async function POST(request: Request) {
 
   const supabase = createAdminClient();
 
-  const { data: business, error: businessError } = await supabase
-    .from("businesses")
-    .insert({
-      name,
-      owner_email: ownerEmail,
-      service_area: String(draft.service_area ?? "").trim() || null,
-      services: sanitizeServices(draft.services),
-      hours: sanitizeHours(draft.hours),
-      emergency_policy: String(draft.emergency_policy ?? "").trim() || null,
-      raw_scraped_content: body.rawScrapedContent ?? null,
-      status: "trial",
-    })
-    .select("id")
-    .single<{ id: string }>();
-
-  if (businessError || !business) {
-    console.error("[create-business] insert business failed", businessError);
-    return NextResponse.json(
-      { error: "Could not create the business record." },
-      { status: 500 },
-    );
-  }
-
-  const { error: userError } = await supabase.from("business_users").insert({
-    business_id: business.id,
-    email: ownerEmail,
-    role: "owner",
-    auth_user_id: null,
+  // Business + owner-user creation happens in one DB transaction (migration
+  // 0010) so a crash between the two inserts can't leave an orphaned,
+  // ownerless business — the prior two-step insert + manual rollback only
+  // covered an insert *error*, not a process crash mid-request.
+  const { data, error: createError } = await supabase.rpc("create_business_with_owner", {
+    p_name: name,
+    p_owner_email: ownerEmail,
+    p_service_area: String(draft.service_area ?? "").trim() || null,
+    p_services: sanitizeServices(draft.services),
+    p_hours: sanitizeHours(draft.hours),
+    p_emergency_policy: String(draft.emergency_policy ?? "").trim() || null,
+    p_raw_scraped_content: body.rawScrapedContent ?? null,
   });
+  const businessId = data as string | null;
 
-  if (userError) {
-    // Roll back the orphaned business so a retry starts clean.
-    await supabase.from("businesses").delete().eq("id", business.id);
-    console.error("[create-business] insert owner failed", userError);
+  if (createError || !businessId) {
+    console.error("[create-business] create_business_with_owner failed", createError?.message);
     return NextResponse.json(
-      { error: "Could not create the owner account. Please try again." },
+      { error: "Could not create the business. Please try again." },
       { status: 500 },
     );
   }
@@ -132,17 +115,17 @@ export async function POST(request: Request) {
   // Provision a real Twilio voice number and store it (design §7 step 4).
   // Best-effort: if Twilio is unconfigured or the purchase fails, the business
   // still goes live and this can be retried — onboarding never hard-fails on it.
-  const phoneNumber = await provisionNumber(business.id);
+  const phoneNumber = await provisionNumber(businessId);
   if (phoneNumber) {
     await supabase
       .from("businesses")
       .update({ phone_number: phoneNumber })
-      .eq("id", business.id);
+      .eq("id", businessId);
   }
 
   return NextResponse.json({
-    businessId: business.id,
-    embedCode: buildEmbedCode(business.id),
+    businessId,
+    embedCode: buildEmbedCode(businessId),
     phoneNumber, // string (E.164) when provisioned, else null
     phoneNumberPlaceholder: PHONE_NUMBER_PLACEHOLDER,
   });

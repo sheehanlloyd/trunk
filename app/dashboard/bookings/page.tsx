@@ -91,19 +91,35 @@ function BookingCard({
   );
 }
 
-export default async function BookingsPage() {
+/** Page size for "Load more" — also the increment each click adds. */
+const PAGE_SIZE = 50;
+
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ limit?: string }>;
+}) {
   const context = await requireAuth();
   if (!context) return null;
+
+  const params = await searchParams;
+  const requestedLimit = Number.parseInt(params.limit ?? "", 10);
+  const limit =
+    Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 5000)
+      : PAGE_SIZE;
 
   const supabase = await createClient();
   const { data } = await supabase
     .from("bookings")
     .select("*, conversation:conversations(id, ai_confidence_flag)")
     .order("created_at", { ascending: false })
-    .limit(200)
+    // Fetch one extra row to detect whether there's more beyond this page.
+    .range(0, limit)
     .returns<BookingRow[]>();
 
-  const bookings = data ?? [];
+  const hasMore = (data?.length ?? 0) > limit;
+  const bookings = (data ?? []).slice(0, limit);
   // New/unactioned bookings are the most important thing on the page (design §5).
   const fresh = bookings.filter((b) => b.status === "new");
   const rest = bookings.filter((b) => b.status !== "new");
@@ -151,6 +167,17 @@ export default async function BookingsPage() {
           ) : null}
         </div>
       )}
+
+      {hasMore ? (
+        <div className="mt-6 flex justify-center">
+          <Link
+            href={`/dashboard/bookings?limit=${limit + PAGE_SIZE}`}
+            className="rounded-lg border border-[--color-border] bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+          >
+            Load more
+          </Link>
+        </div>
+      ) : null}
     </PageLayout>
   );
 }

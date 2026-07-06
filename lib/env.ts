@@ -42,11 +42,14 @@ export function billingGracePeriodDays(): number {
 
 /**
  * Whether to verify the X-Twilio-Signature on the voice webhooks. These are
- * public endpoints that trigger owner notifications, so validation MUST be on in
- * production. Defaults off so local/simulated webhook POSTs work in development.
+ * public endpoints that trigger owner notifications, so this fails SAFE: it
+ * validates unless the var is explicitly set to the string "false". An unset
+ * or misconfigured var in production therefore still validates, rather than
+ * silently accepting unsigned requests. Set to "false" only for local/simulated
+ * webhook POSTs in development.
  */
 export function validateTwilioSignature(): boolean {
-  return process.env.TWILIO_VALIDATE_SIGNATURE === "true";
+  return process.env.TWILIO_VALIDATE_SIGNATURE !== "false";
 }
 
 /**
