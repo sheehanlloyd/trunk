@@ -21,6 +21,7 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     stripe_subscription_id: null,
     average_job_value_cents: null,
     notification_preferences: { channels: ["sms"], daily_digest: true },
+    grace_period_ends_at: null,
     created_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };

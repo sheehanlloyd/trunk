@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getBillingState } from "@/lib/billing/lookup";
+import { isPaused } from "@/lib/billing/status";
 import { handleTurn } from "@/lib/conversation/engine";
 
 export const runtime = "nodejs";
@@ -60,6 +62,21 @@ export async function POST(request: Request) {
   }
   if (message.length > 4000) {
     return json({ error: "message is too long." }, 400);
+  }
+
+  // Billing gate (design §10): a paused business (or a past_due one whose grace
+  // window has elapsed) doesn't answer — we return a neutral message WITHOUT
+  // calling the model or writing any conversation rows. Data is never touched.
+  const billing = await getBillingState(businessId);
+  if (billing && isPaused(billing.status, billing.grace_period_ends_at)) {
+    return json({
+      conversationId: null,
+      reply:
+        "This line is temporarily unavailable. Please try again later or reach out another way.",
+      outcome: "no_action",
+      emergency: false,
+      paused: true,
+    });
   }
 
   try {

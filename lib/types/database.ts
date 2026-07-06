@@ -66,6 +66,9 @@ export interface Business {
   /** Owner-set typical job value in cents; null until they fill it in. */
   average_job_value_cents: number | null;
   notification_preferences: NotificationPreferences;
+  /** When set, the business is in a billing grace window (past_due) that ends
+   *  at this time; after it passes the business moves to `paused`. */
+  grace_period_ends_at: string | null;
   created_at: string;
 }
 
@@ -131,5 +134,16 @@ export interface NotificationLog {
   type: NotificationType;
   related_booking_id: string | null;
   status: NotificationStatus;
+  /** Labels the alert's purpose, e.g. "billing_past_due" (see 0007_billing.sql). */
+  reason: string | null;
+  created_at: string;
+}
+
+/** Idempotency ledger for Stripe webhook deliveries (see 0007_billing.sql). */
+export interface StripeWebhookEvent {
+  stripe_event_id: string;
+  type: string;
+  business_id: string | null;
+  processed_at: string | null;
   created_at: string;
 }

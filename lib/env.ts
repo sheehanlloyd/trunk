@@ -28,7 +28,17 @@ export const publicEnv = {
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   ),
+  /** Reserved for client-side Stripe.js; unused today (we redirect via
+   *  session.url server-side). Optional so the app runs before billing is set up. */
+  stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
 } as const;
+
+/** Grace-period length (days) before a past_due business is paused. Design §10
+ *  recommends 5–7; defaults to 7 when unset. */
+export function billingGracePeriodDays(): number {
+  const raw = Number.parseInt(process.env.BILLING_GRACE_PERIOD_DAYS ?? "", 10);
+  return Number.isFinite(raw) && raw > 0 ? raw : 7;
+}
 
 /**
  * Emails allowed to use the operator-only onboarding tool, parsed from the
@@ -80,5 +90,9 @@ export const serverEnv = {
         process.env.STRIPE_PRICE_SUBSCRIPTION,
       ),
     };
+  },
+  /** Shared secret guarding the daily grace-expiry cron endpoint. */
+  get cronSecret(): string {
+    return required("CRON_SECRET", process.env.CRON_SECRET);
   },
 } as const;

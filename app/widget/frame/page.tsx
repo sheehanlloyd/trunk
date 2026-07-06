@@ -1,5 +1,7 @@
 import { WidgetChat } from "@/components/chat/WidgetChat";
+import { isPaused } from "@/lib/billing/status";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { BusinessStatus } from "@/lib/types/database";
 
 /**
  * The chat widget's iframe document. `public/widget.js` embeds this route on a
@@ -14,16 +16,22 @@ export const runtime = "nodejs";
 // Always render per-request: the businessId comes from the query string.
 export const dynamic = "force-dynamic";
 
-async function loadBusinessName(businessId: string): Promise<string | null> {
+interface WidgetBusiness {
+  name: string;
+  status: BusinessStatus;
+  grace_period_ends_at: string | null;
+}
+
+async function loadBusiness(businessId: string): Promise<WidgetBusiness | null> {
   if (!businessId) return null;
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("name")
+      .select("name, status, grace_period_ends_at")
       .eq("id", businessId)
-      .maybeSingle<{ name: string }>();
-    return data?.name ?? null;
+      .maybeSingle<WidgetBusiness>();
+    return data ?? null;
   } catch (err) {
     console.error("[widget/frame] failed to load business", err);
     return null;
@@ -36,7 +44,7 @@ export default async function WidgetFramePage({
   searchParams: Promise<{ businessId?: string }>;
 }) {
   const { businessId = "" } = await searchParams;
-  const name = await loadBusinessName(businessId.trim());
+  const business = await loadBusiness(businessId.trim());
 
   // Make this route's document transparent so the host page shows through
   // around the bubble, scoped to this page only. `color-scheme: light` is
@@ -47,7 +55,7 @@ export default async function WidgetFramePage({
   const transparentStyle =
     "html,body{background:transparent!important;margin:0;color-scheme:light}";
 
-  if (!businessId.trim() || !name) {
+  if (!businessId.trim() || !business) {
     return (
       <>
         <style>{transparentStyle}</style>
@@ -60,10 +68,25 @@ export default async function WidgetFramePage({
     );
   }
 
+  // Paused for billing (design §10): show a neutral, temporary message instead
+  // of the chat. Nothing is deleted — the business simply isn't answering now.
+  if (isPaused(business.status, business.grace_period_ends_at)) {
+    return (
+      <>
+        <style>{transparentStyle}</style>
+        <div className="flex h-dvh w-full items-end justify-end p-3">
+          <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 shadow">
+            This chat is temporarily unavailable. Please check back soon.
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <style>{transparentStyle}</style>
-      <WidgetChat businessId={businessId.trim()} businessName={name} />
+      <WidgetChat businessId={businessId.trim()} businessName={business.name} />
     </>
   );
 }
