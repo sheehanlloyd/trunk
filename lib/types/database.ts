@@ -41,6 +41,14 @@ export interface ConversationTurn {
   text: string;
 }
 
+/** Owner's alert preferences (see 0006_dashboard_settings.sql). */
+export interface NotificationPreferences {
+  /** Which channels to alert on. Empty means "no alerts". */
+  channels: NotificationType[];
+  /** Opt in to the daily digest of general (non-booking, non-emergency) activity. */
+  daily_digest: boolean;
+}
+
 // --- Row types ---------------------------------------------------------------
 export interface Business {
   id: string;
@@ -55,6 +63,9 @@ export interface Business {
   status: BusinessStatus;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  /** Owner-set typical job value in cents; null until they fill it in. */
+  average_job_value_cents: number | null;
+  notification_preferences: NotificationPreferences;
   created_at: string;
 }
 

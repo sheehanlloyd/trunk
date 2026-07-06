@@ -15,6 +15,7 @@ import type {
 
 import {
   getBusiness,
+  getKnowledgeCorrections,
   loadOrCreateConversation,
   saveConversation,
 } from "./persistence";
@@ -155,13 +156,14 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
   const message = input.message?.trim();
   if (!message) throw new Error("Message is required.");
 
-  const [business, conversation] = await Promise.all([
+  const [business, conversation, corrections] = await Promise.all([
     getBusiness(input.businessId),
     loadOrCreateConversation({
       businessId: input.businessId,
       conversationId: input.conversationId,
       channel: input.channel,
     }),
+    getKnowledgeCorrections(input.businessId),
   ]);
 
   // Append the customer's turn to the DB-sourced history (never client-sourced).
@@ -177,7 +179,7 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
   const response = await anthropic.messages.parse({
     model: CLAUDE_MODEL,
     max_tokens: 1024,
-    system: buildConversationSystemPrompt(business, input.channel),
+    system: buildConversationSystemPrompt(business, input.channel, corrections),
     messages: toMessages(withUser),
     output_config: { format: zodOutputFormat(TurnAnalysisSchema) },
   });

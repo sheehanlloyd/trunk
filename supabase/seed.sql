@@ -7,7 +7,7 @@
 --   2. Confirm the dashboard only ever shows Cool Breeze data, never
 --      Rapid Response Plumbing data (proves tenant isolation via RLS).
 
-insert into businesses (id, name, owner_email, phone_number, service_area, services, hours, emergency_policy, status)
+insert into businesses (id, name, owner_email, phone_number, service_area, services, hours, emergency_policy, average_job_value_cents, status)
 values
   (
     '11111111-1111-1111-1111-111111111111',
@@ -18,6 +18,7 @@ values
     '[{"service":"AC Repair","description":"Diagnostics and repair for central AC","price_range":"$150-$600"},{"service":"Furnace Tune-Up","description":"Seasonal heating maintenance","price_range":"$99-$250"}]'::jsonb,
     '{"mon":"8-6","tue":"8-6","wed":"8-6","thu":"8-6","fri":"8-6","sat":"9-2","sun":"closed"}'::jsonb,
     'After hours: text the on-call tech line; no-heat below 40F is treated as an emergency callback within 15 minutes.',
+    35000,
     'active'
   ),
   (
@@ -29,6 +30,7 @@ values
     '[{"service":"Drain Cleaning","description":"Clogged drains and hydro jetting","price_range":"$120-$400"},{"service":"Water Heater Install","description":"Tank and tankless installation","price_range":"$900-$3000"}]'::jsonb,
     '{"mon":"7-7","tue":"7-7","wed":"7-7","thu":"7-7","fri":"7-7","sat":"8-4","sun":"emergency only"}'::jsonb,
     'Active leak or flooding is an emergency: instruct caller to shut off main and we call back immediately.',
+    120000,
     'trial'
   );
 

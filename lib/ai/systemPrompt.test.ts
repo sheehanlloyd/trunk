@@ -18,6 +18,8 @@ function makeBusiness(overrides: Partial<Business>): Business {
     status: "trial",
     stripe_customer_id: null,
     stripe_subscription_id: null,
+    average_job_value_cents: null,
+    notification_preferences: { channels: ["sms"], daily_digest: true },
     created_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };

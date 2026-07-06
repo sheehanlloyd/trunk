@@ -4,6 +4,7 @@ import type {
   ConversationChannel,
   ConversationOutcome,
   ConversationTurn,
+  KnowledgeCorrection,
 } from "@/lib/types/database";
 
 /**
@@ -31,6 +32,37 @@ export async function getBusiness(businessId: string): Promise<Business> {
   }
   if (!data) throw new Error(`Business not found: ${businessId}`);
   return data;
+}
+
+/** Cap on corrections replayed into the prompt — bounds prompt size/cost. */
+const MAX_CORRECTIONS = 50;
+
+/**
+ * Loads this business's knowledge corrections (design §12), newest first. These
+ * are the owner's authoritative overrides to what the AI says; `handleTurn`
+ * folds them into every turn's system prompt, so a correction submitted from the
+ * dashboard takes effect on the very next customer message. Scoped by
+ * business_id (service-role bypasses RLS, so the scope is enforced here).
+ */
+export async function getKnowledgeCorrections(
+  businessId: string,
+): Promise<KnowledgeCorrection[]> {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("knowledge_corrections")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false })
+    .limit(MAX_CORRECTIONS)
+    .returns<KnowledgeCorrection[]>();
+
+  if (error) {
+    throw new Error(
+      `Failed to load knowledge corrections for ${businessId}: ${error.message}`,
+    );
+  }
+  return data ?? [];
 }
 
 /**
