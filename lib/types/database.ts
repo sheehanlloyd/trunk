@@ -52,6 +52,20 @@ export interface NotificationPreferences {
   daily_digest: boolean;
 }
 
+/** Owner-tunable widget appearance (see 0011_v2_features.sql). All fields
+ *  optional — `{}` renders the stock widget, so existing tenants are unchanged. */
+export interface WidgetConfig {
+  /** Hex accent color for the bubble/header, e.g. "#0e4c5e". */
+  accent_color?: string;
+  /** Custom first message shown when the widget opens. */
+  greeting?: string;
+  /** Which corner the widget anchors to on desktop. */
+  position?: "right" | "left";
+  /** Show a greeting teaser bubble beside the collapsed launcher. Default off —
+   *  owners opt in from the widget studio. */
+  teaser?: boolean;
+}
+
 // --- Row types ---------------------------------------------------------------
 export interface Business {
   id: string;
@@ -74,6 +88,12 @@ export interface Business {
   grace_period_ends_at: string | null;
   /** How inbound phone calls reach the AI (see 0008_voice.sql). */
   call_routing_mode: CallRoutingMode;
+  /** Owner's mobile for SMS alerts; null falls back to email (0011). */
+  owner_phone: string | null;
+  /** Public review URL (e.g. Google review link) for review-request texts (0011). */
+  review_link: string | null;
+  /** Widget appearance overrides; `{}` = stock look (0011). */
+  widget_config: WidgetConfig;
   created_at: string;
 }
 
@@ -96,6 +116,8 @@ export interface Conversation {
   outcome: ConversationOutcome | null;
   ai_confidence_flag: boolean;
   call_sid: string | null;
+  /** Stored AI summary of the transcript, generated on demand (0011). */
+  summary: string | null;
   created_at: string;
 }
 
@@ -122,6 +144,8 @@ export interface Lead {
   preferred_time: string | null;
   notes: string | null;
   reason: string | null;
+  /** Set when the owner marks the lead handled from the Leads page (0011). */
+  resolved_at: string | null;
   created_at: string;
 }
 
@@ -142,6 +166,35 @@ export interface NotificationLog {
   status: NotificationStatus;
   /** Labels the alert's purpose, e.g. "billing_past_due" (see 0007_billing.sql). */
   reason: string | null;
+  created_at: string;
+}
+
+/** Structured content of one AI insights report (see 0011_v2_features.sql). */
+export interface InsightContent {
+  /** One-sentence takeaway shown as the report title. */
+  headline: string;
+  /** Most common things customers asked about, with counts. */
+  top_questions: { question: string; count: number }[];
+  /** Places the AI lacked info or gave a low-confidence answer. */
+  gaps: string[];
+  /** Ready-to-apply knowledge corrections the owner can accept. */
+  suggested_corrections: { original: string; corrected: string }[];
+  /** Aggregate numbers for the period the report covers. */
+  stats: {
+    conversations: number;
+    bookings: number;
+    leads: number;
+    emergencies: number;
+  };
+}
+
+/** One generated AI insights report (see 0011_v2_features.sql). */
+export interface Insight {
+  id: string;
+  business_id: string;
+  period_start: string;
+  period_end: string;
+  content: InsightContent;
   created_at: string;
 }
 

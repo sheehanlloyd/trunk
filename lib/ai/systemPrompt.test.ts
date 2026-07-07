@@ -22,6 +22,9 @@ function makeBusiness(overrides: Partial<Business>): Business {
     notification_preferences: { channels: ["sms"], daily_digest: true },
     grace_period_ends_at: null,
     call_routing_mode: "direct",
+    owner_phone: null,
+    review_link: null,
+    widget_config: {},
     created_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
