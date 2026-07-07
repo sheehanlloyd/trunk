@@ -8,6 +8,8 @@ import {
 } from "@/app/dashboard/actions";
 import { Button } from "@/components/shared/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card";
+import { useState } from "react";
+
 import type { NotificationPreferences } from "@/lib/types/database";
 
 const INITIAL: ActionResult = { ok: false };
@@ -16,16 +18,26 @@ const INITIAL: ActionResult = { ok: false };
  * Notification preferences (design §12). The instant-for-bookings/emergencies
  * vs digest-for-everything-else split is fixed product behavior, stated plainly
  * here; the owner only chooses the channel(s) and whether to get the digest.
+ *
+ * Audit fix (item 2): SMS needs a real mobile number to send to — this form
+ * collects it (into `businesses.owner_phone`) right next to the "Text me"
+ * choice, and warns inline if SMS is selected without one on file, so it's
+ * obvious *before* saving rather than a silent no-op notification later.
  */
 export function NotificationPreferencesForm({
   prefs,
+  ownerPhone,
 }: {
   prefs: NotificationPreferences;
+  ownerPhone: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     saveNotificationPreferences,
     INITIAL,
   );
+  const [smsChecked, setSmsChecked] = useState(prefs.channels.includes("sms"));
+  const [phone, setPhone] = useState(ownerPhone ?? "");
+  const missingPhoneForSms = smsChecked && phone.trim().replace(/\D/g, "").length < 7;
 
   return (
     <Card>
@@ -43,11 +55,37 @@ export function NotificationPreferencesForm({
                 type="checkbox"
                 name="channels"
                 value="sms"
-                defaultChecked={prefs.channels.includes("sms")}
+                checked={smsChecked}
+                onChange={(e) => setSmsChecked(e.target.checked)}
                 className="h-5 w-5"
               />
               Text me (SMS) — fastest on a job site
             </label>
+            {smsChecked ? (
+              <label className="mb-2 ml-8 block">
+                <span className="mb-1 block text-xs font-medium text-slate-700">
+                  Your mobile number
+                </span>
+                <input
+                  type="tel"
+                  name="owner_phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. (512) 555-0100"
+                  className="w-full max-w-xs rounded-lg border border-border px-3 py-2 text-sm text-slate-900"
+                />
+                {missingPhoneForSms ? (
+                  <span className="mt-1 block text-xs text-copper-700">
+                    Add a mobile number to actually receive texts — without one,
+                    we&apos;ll email you instead.
+                  </span>
+                ) : null}
+              </label>
+            ) : (
+              // Keep the value in the form even when the SMS field is hidden,
+              // so unchecking "Text me" doesn't erase a saved number.
+              <input type="hidden" name="owner_phone" value={phone} />
+            )}
             <label className="flex min-h-11 items-center gap-3 text-sm text-slate-900">
               <input
                 type="checkbox"

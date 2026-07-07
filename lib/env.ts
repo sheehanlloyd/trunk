@@ -65,6 +65,19 @@ export function operatorEmails(): string[] {
 }
 
 /**
+ * "From" address for outbound owner-notification emails (Resend). Defaults to
+ * Resend's sandbox sender, which works with zero domain verification so
+ * notifications work immediately in dev/trial — override with a verified
+ * sending domain address in production via `NOTIFICATION_FROM_EMAIL`.
+ */
+export function notificationFromEmail(): string {
+  return (
+    process.env.NOTIFICATION_FROM_EMAIL?.trim() ||
+    "AI Receptionist <onboarding@resend.dev>"
+  );
+}
+
+/**
  * Server-only config. Access properties on demand so that unset future-phase
  * secrets don't throw until a feature that needs them is actually used.
  */
@@ -78,6 +91,10 @@ export const serverEnv = {
   },
   get anthropicApiKey(): string {
     return required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY);
+  },
+  /** Resend API key for real owner-notification emails (lib/notifications/adapters.ts). */
+  get resendApiKey(): string {
+    return required("RESEND_API_KEY", process.env.RESEND_API_KEY);
   },
   get twilio() {
     return {
