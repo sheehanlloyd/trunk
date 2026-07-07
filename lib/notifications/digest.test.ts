@@ -67,6 +67,15 @@ describe("buildDigest", () => {
     expect(d.body).toContain("dashboard");
   });
 
+  it("gives the engine_error lead reason (audit fix) a readable label", () => {
+    const d = buildDigest({
+      businessName: "Acme",
+      conversations: [],
+      leads: leads("engine_error"),
+    });
+    expect(d.body).toContain("a conversation the AI couldn't finish answering");
+  });
+
   it("produces SMS-safe copy: no markdown, symbols, or URLs", () => {
     const d = buildDigest({
       businessName: "Acme",

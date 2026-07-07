@@ -9,6 +9,9 @@ import {
 } from "@/lib/booking/capture";
 import type { BookingDetails } from "@/lib/booking/types";
 import type {
+  Business,
+  Conversation,
+  ConversationChannel,
   ConversationOutcome,
   ConversationTurn,
 } from "@/lib/types/database";
@@ -152,6 +155,121 @@ function toMessages(transcript: ConversationTurn[]) {
   }));
 }
 
+/**
+ * Channel-appropriate apology used when the model call itself fails (see
+ * {@link runModelTurn}). Voice keeps this in "clarify" framing so the existing
+ * 2-attempt voicemail fallback (`lib/voice/router.ts`) still applies unchanged;
+ * chat gets a slightly longer, actionable apology since it renders directly as
+ * a chat bubble rather than being spoken aloud.
+ */
+function fallbackReply(channel: ConversationChannel): string {
+  return channel === "voice"
+    ? "Sorry, I didn't quite catch that. Could you say that again?"
+    : "Sorry — something went wrong on our end. Please try again, or leave your name and phone number and we'll follow up.";
+}
+
+/**
+ * Calls Claude and returns its structured analysis, or `null` if the call
+ * failed for any reason (timeout, rate limit, outage, empty structured
+ * output). Never throws — callers decide what a failed turn means; this
+ * function only isolates the one step that's allowed to fail.
+ */
+async function runModelTurn(
+  business: Business,
+  channel: ConversationChannel,
+  corrections: Parameters<typeof buildConversationSystemPrompt>[2],
+  history: ConversationTurn[],
+): Promise<TurnAnalysis | null> {
+  try {
+    // Imported lazily so this module's pure helpers (decide, mergeOutcome, …)
+    // stay importable in unit tests without eager env validation.
+    const { CLAUDE_MODEL, VOICE_CLAUDE_MODEL, getAnthropic } = await import(
+      "@/lib/ai/anthropic"
+    );
+    const anthropic = getAnthropic();
+    // Voice is a live phone call — a caller is waiting in silence — so use the
+    // faster model and a tighter token budget to cut per-turn latency. Chat
+    // keeps the larger model. (Phase 6 latency tradeoff.)
+    const isVoice = channel === "voice";
+    const response = await anthropic.messages.parse({
+      model: isVoice ? VOICE_CLAUDE_MODEL : CLAUDE_MODEL,
+      max_tokens: isVoice ? 256 : 1024,
+      system: buildConversationSystemPrompt(business, channel, corrections),
+      messages: toMessages(history),
+      output_config: { format: zodOutputFormat(TurnAnalysisSchema) },
+    });
+    return response.parsed_output ?? null;
+  } catch (err) {
+    console.error("[engine] model call failed", {
+      businessId: business.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+/**
+ * Safety net for when the model call fails AFTER the customer's turn is
+ * already durably saved (see {@link handleTurn}). Never throws: always
+ * returns a valid `TurnResult` so chat/voice callers can reply normally
+ * instead of surfacing a raw error, and always leaves the conversation with
+ * an accurate, non-null outcome. Whatever contact info earlier turns already
+ * captured is preserved as a lead needing follow-up — this turn produced no
+ * NEW extraction (the model never ran), but prior progress must not be lost
+ * either (design §12: "save partial info... don't lose it").
+ */
+async function handleEngineFailure(
+  business: Business,
+  conversation: Conversation,
+  withUser: ConversationTurn[],
+  channel: ConversationChannel,
+): Promise<TurnResult> {
+  const reply = fallbackReply(channel);
+  const outcome = mergeOutcome(conversation.outcome, "unclear");
+  const finalTranscript: ConversationTurn[] = [
+    ...withUser,
+    { role: "assistant", text: reply },
+  ];
+
+  await saveConversation(conversation.id, {
+    transcript: finalTranscript,
+    outcome,
+    customerName: conversation.customer_name,
+    customerPhone: conversation.customer_phone,
+    aiConfidenceFlag: true,
+  });
+
+  const knownDetails: BookingDetails = {
+    name: conversation.customer_name ?? "",
+    phone: conversation.customer_phone ?? "",
+    service: "",
+    preferredTime: "",
+    notes: "",
+  };
+  if (hasSavableContact(knownDetails)) {
+    try {
+      await upsertLead({
+        businessId: business.id,
+        conversationId: conversation.id,
+        partial: knownDetails,
+        reason: "engine_error",
+      });
+    } catch (err) {
+      console.error("[engine] failed to upsert lead after engine failure", err);
+    }
+  }
+
+  return {
+    conversationId: conversation.id,
+    reply,
+    outcome,
+    bookingId: null,
+    emergency: false,
+    aiConfidenceFlag: true,
+    needsClarification: true,
+  };
+}
+
 export async function handleTurn(input: TurnInput): Promise<TurnResult> {
   const message = input.message?.trim();
   if (!message) throw new Error("Message is required.");
@@ -172,27 +290,22 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
     { role: "customer", text: message },
   ];
 
-  // Imported lazily so this module's pure helpers (decide, mergeOutcome, …)
-  // stay importable in unit tests without eager env validation.
-  const { CLAUDE_MODEL, VOICE_CLAUDE_MODEL, getAnthropic } = await import(
-    "@/lib/ai/anthropic"
-  );
-  const anthropic = getAnthropic();
-  // Voice is a live phone call — a caller is waiting in silence — so use the
-  // faster model and a tighter token budget to cut per-turn latency. Chat keeps
-  // the larger model. (Phase 6 latency tradeoff.)
-  const isVoice = input.channel === "voice";
-  const response = await anthropic.messages.parse({
-    model: isVoice ? VOICE_CLAUDE_MODEL : CLAUDE_MODEL,
-    max_tokens: isVoice ? 256 : 1024,
-    system: buildConversationSystemPrompt(business, input.channel, corrections),
-    messages: toMessages(withUser),
-    output_config: { format: zodOutputFormat(TurnAnalysisSchema) },
+  // Durability-first (design §12 / audit fix): persist the customer's turn to
+  // the transcript IMMEDIATELY, before the model call below. If that call then
+  // fails for any reason (timeout, rate limit, outage), what the customer said
+  // is never silently lost — handleEngineFailure below always has it, and it's
+  // already on disk even if the process crashes mid-request.
+  await saveConversation(conversation.id, {
+    transcript: withUser,
+    outcome: conversation.outcome,
+    customerName: conversation.customer_name,
+    customerPhone: conversation.customer_phone,
+    aiConfidenceFlag: conversation.ai_confidence_flag,
   });
 
-  const analysis = response.parsed_output;
+  const analysis = await runModelTurn(business, input.channel, corrections, withUser);
   if (!analysis) {
-    throw new Error("Conversation model returned no structured output.");
+    return handleEngineFailure(business, conversation, withUser, input.channel);
   }
 
   const details = analysisToDetails(analysis);
