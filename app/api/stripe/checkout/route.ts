@@ -62,7 +62,14 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error("[stripe/checkout] failed", err);
+    // Never log the raw error object (audit fix, item 6, matching the pattern
+    // already used in the webhook route): a Stripe API error can carry
+    // customer billing details (email, card metadata) on its own properties.
+    // Log only the message.
+    console.error(
+      "[stripe/checkout] failed",
+      err instanceof Error ? err.message : "unknown error",
+    );
     return NextResponse.json(
       { error: "Could not start checkout. Please try again." },
       { status: 500 },
