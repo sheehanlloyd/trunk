@@ -45,6 +45,19 @@ function draftToEditable(draft: OnboardingDraft): EditableDraft {
   };
 }
 
+/** A fully-blank draft — the manual-entry fallback starting point (audit fix,
+ *  item 3) when scraping/extraction can't produce one automatically. */
+function emptyEditable(): EditableDraft {
+  return {
+    name: "",
+    ownerEmail: "",
+    serviceArea: "",
+    services: [{ service: "" }],
+    hours: [],
+    emergencyPolicy: "",
+  };
+}
+
 export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
   const [step, setStep] = useState<Step>("url");
   const [url, setUrl] = useState("");
@@ -57,6 +70,10 @@ export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
   const [sourceUrl, setSourceUrl] = useState("");
   const [rawContent, setRawContent] = useState("");
   const [result, setResult] = useState<CreateResult | null>(null);
+  /** Set when scraping/extraction failed and the operator is filling the
+   *  review form in by hand instead (audit fix, item 3). Shown as a banner on
+   *  the review step so it's clear why the fields are empty/incomplete. */
+  const [manualEntryNotice, setManualEntryNotice] = useState<string | null>(null);
 
   async function handleScrape() {
     setError(null);
@@ -69,10 +86,23 @@ export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Something went wrong scraping that site.");
+        // Manual-entry fallback: don't dead-end on an error banner with no
+        // way forward. Proceed to the SAME review/edit form used after a
+        // successful extraction, pre-filled with whatever was recovered (or
+        // blank), so the operator can still onboard this client by hand.
+        setManualEntryNotice(
+          data.error ?? "Could not build a draft automatically.",
+        );
+        setEdit(emptyEditable());
+        setWarnings([]);
+        setContact({});
+        setSourceUrl(data.sourceUrl ?? url);
+        setRawContent(data.rawScrapedContent ?? "");
+        setStep("review");
         return;
       }
       const draft = data.draft as OnboardingDraft;
+      setManualEntryNotice(null);
       setEdit(draftToEditable(draft));
       setWarnings(draft.warnings ?? []);
       setContact(draft.contact ?? {});
@@ -80,7 +110,17 @@ export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
       setRawContent(data.rawScrapedContent ?? "");
       setStep("review");
     } catch {
-      setError("Network error — please try again.");
+      // A network error reaching our OWN API is rarer, but the same principle
+      // applies — still hand off to manual entry rather than blocking.
+      setManualEntryNotice(
+        "Network error reaching the scraper. Enter the business details manually below.",
+      );
+      setEdit(emptyEditable());
+      setWarnings([]);
+      setContact({});
+      setSourceUrl(url);
+      setRawContent("");
+      setStep("review");
     } finally {
       setLoading(false);
     }
@@ -132,6 +172,7 @@ export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
     setContact({});
     setResult(null);
     setError(null);
+    setManualEntryNotice(null);
   }
 
   return (
@@ -161,12 +202,14 @@ export function OnboardingClient({ operatorEmail }: { operatorEmail: string }) {
           edit={edit}
           setEdit={setEdit}
           warnings={warnings}
+          manualEntryNotice={manualEntryNotice}
           contact={contact}
           sourceUrl={sourceUrl}
           loading={loading}
           error={error}
           onBack={() => {
             setError(null);
+            setManualEntryNotice(null);
             setStep("url");
           }}
           onCreate={handleCreate}
@@ -259,6 +302,7 @@ function ReviewStep({
   edit,
   setEdit,
   warnings,
+  manualEntryNotice,
   contact,
   sourceUrl,
   loading,
@@ -269,6 +313,7 @@ function ReviewStep({
   edit: EditableDraft;
   setEdit: (v: EditableDraft) => void;
   warnings: string[];
+  manualEntryNotice: string | null;
   contact: OnboardingDraft["contact"];
   sourceUrl: string;
   loading: boolean;
@@ -302,11 +347,32 @@ function ReviewStep({
 
   return (
     <div className="max-w-3xl space-y-4">
-      <p className="text-sm text-muted">
-        Draft from{" "}
-        <span className="font-medium text-slate-700">{sourceUrl}</span>. Review
-        and correct everything below — this is what the AI will know.
-      </p>
+      {manualEntryNotice ? (
+        <p className="text-sm text-muted">
+          Working from <span className="font-medium text-slate-700">{sourceUrl}</span>.
+          Fill in the details below by hand — this is what the AI will know.
+        </p>
+      ) : (
+        <p className="text-sm text-muted">
+          Draft from{" "}
+          <span className="font-medium text-slate-700">{sourceUrl}</span>. Review
+          and correct everything below — this is what the AI will know.
+        </p>
+      )}
+
+      {manualEntryNotice && (
+        <Card className="border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-800">
+            Couldn&apos;t build a draft automatically
+          </p>
+          <p className="mt-1 text-sm text-amber-700">{manualEntryNotice}</p>
+          <p className="mt-1 text-sm text-amber-700">
+            No problem — enter the business&apos;s details below yourself and
+            confirm as usual. Onboarding still works, it just needs a bit more
+            typing this time.
+          </p>
+        </Card>
+      )}
 
       {warnings.length > 0 && (
         <Card className="border-amber-200 bg-amber-50 p-4">
