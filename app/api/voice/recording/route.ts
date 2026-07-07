@@ -91,10 +91,13 @@ export async function POST(request: Request) {
   // Alert the owner to follow up (normal priority — not an emergency).
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, name, owner_email, notification_preferences")
+    .select("id, name, owner_email, owner_phone, notification_preferences")
     .eq("id", conversation.business_id)
     .maybeSingle<
-      Pick<Business, "id" | "name" | "owner_email" | "notification_preferences">
+      Pick<
+        Business,
+        "id" | "name" | "owner_email" | "owner_phone" | "notification_preferences"
+      >
     >();
 
   if (business) {

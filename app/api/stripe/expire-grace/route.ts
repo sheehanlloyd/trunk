@@ -27,11 +27,14 @@ export async function POST(request: Request) {
   // Rows with a null grace deadline are excluded (`.lt` skips nulls) — correct.
   const { data, error } = await supabase
     .from("businesses")
-    .select("id, name, owner_email, notification_preferences")
+    .select("id, name, owner_email, owner_phone, notification_preferences")
     .eq("status", "past_due")
     .lt("grace_period_ends_at", nowIso)
     .returns<
-      Pick<Business, "id" | "name" | "owner_email" | "notification_preferences">[]
+      Pick<
+        Business,
+        "id" | "name" | "owner_email" | "owner_phone" | "notification_preferences"
+      >[]
     >();
 
   if (error) {
