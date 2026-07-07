@@ -42,8 +42,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A url is required." }, { status: 400 });
   }
 
+  // Tracked outside the try so the catch block can still hand back whatever
+  // was recovered before the failure (see below).
+  let site: Awaited<ReturnType<typeof fetchAndClean>> | null = null;
   try {
-    const site = await fetchAndClean(url);
+    site = await fetchAndClean(url);
     const draft = await extractDraft(site);
     return NextResponse.json({
       draft,
@@ -52,18 +55,36 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     if (err instanceof ScrapeError) {
+      // Scraping itself never got off the ground (bad/unreachable/blocked/thin
+      // URL) — nothing was recovered, but the UI still lets the operator
+      // proceed to manual entry (see sourceUrl/rawScrapedContent below).
       const status = err.reason === "invalid_url" ? 400 : 422;
       return NextResponse.json(
-        { error: err.message, reason: err.reason },
+        {
+          error: err.message,
+          reason: err.reason,
+          sourceUrl: url,
+          rawScrapedContent: "",
+        },
         { status },
       );
     }
     console.error("[onboarding/scrape] extraction failed", err);
+    // Manual-entry fallback (audit fix, item 3): extraction (the AI step) is
+    // the one part of this pipeline that can fail for reasons that have
+    // nothing to do with the operator's input — a rate limit, a timeout, a
+    // provider outage — and it must never fully block onboarding. Hand back
+    // whatever scraping DID recover (the raw page text + normalized URL, when
+    // `fetchAndClean` succeeded) so the operator can proceed straight to the
+    // same review/edit form and fill in the details by hand instead of being
+    // stuck with only an error banner and no way forward.
     return NextResponse.json(
       {
         error:
-          "We scraped the site but couldn't build a draft. Try again, or enter the details manually.",
+          "We scraped the site but couldn't build a draft automatically. Enter the business details manually below.",
         reason: "extraction_failed",
+        sourceUrl: site?.url ?? url,
+        rawScrapedContent: site?.text ?? "",
       },
       { status: 502 },
     );

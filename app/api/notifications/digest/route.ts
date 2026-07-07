@@ -21,6 +21,7 @@ type DigestBusiness = Pick<
   | "id"
   | "name"
   | "owner_email"
+  | "owner_phone"
   | "notification_preferences"
   | "status"
   | "grace_period_ends_at"
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("businesses")
     .select(
-      "id, name, owner_email, notification_preferences, status, grace_period_ends_at",
+      "id, name, owner_email, owner_phone, notification_preferences, status, grace_period_ends_at",
     )
     .eq("notification_preferences->>daily_digest", "true")
     .returns<DigestBusiness[]>();

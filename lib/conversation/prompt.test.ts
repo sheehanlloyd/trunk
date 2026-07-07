@@ -10,6 +10,7 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     id: "00000000-0000-0000-0000-000000000000",
     name: "Rapid Flow Plumbing",
     owner_email: "owner@test.co",
+    owner_phone: null,
     phone_number: null,
     service_area: "Austin, TX",
     services: [{ service: "Drain cleaning", price_range: "$100–$300" }],

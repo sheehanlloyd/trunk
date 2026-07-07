@@ -82,22 +82,59 @@ notifications_log
 
 ## 4. API Routes (Next.js)
 
+Updated to reflect what's actually implemented (audit fix, item 7) — the
+dashboard's reads/writes turned out to be a better fit for Next.js Server
+Actions and direct RLS-scoped Server Component queries than a separate REST
+API, since the browser never calls them directly (only our own pages/forms
+do) and RLS already enforces the same per-tenant guarantee a dedicated API
+layer would. The public, unauthenticated surface (chat, voice, billing
+webhooks, onboarding) is still real HTTP routes, since those ARE called by
+external callers (the embeddable widget, Twilio, Stripe, the operator tool).
+
+**Real HTTP routes** (`app/api/**/route.ts`):
+
 ```
 POST /api/onboarding/scrape          - scrape a URL, return structured draft data
-POST /api/onboarding/create-business - save business record after owner/operator confirms scraped data
-POST /api/chat                       - handle a chat widget message
+                                        (falls back to an empty/partial draft for
+                                        manual entry if scraping or extraction fails —
+                                        never fully blocks onboarding)
+POST /api/onboarding/create-business - save business record after owner/operator confirms
+                                        (or manually entered) draft
+POST /api/chat                       - handle a chat widget message (public, business-scoped)
 POST /api/voice/incoming             - Twilio webhook, incoming call
 POST /api/voice/gather               - Twilio webhook, handle caller speech input
-POST /api/bookings                   - create a booking (called internally by chat/voice handlers)
-PATCH /api/bookings/:id              - update booking status
-POST /api/knowledge/correct          - owner submits a correction to AI knowledge
-GET  /api/dashboard/summary          - conversations, bookings, missed calls counts for dashboard home
-GET  /api/dashboard/conversations    - list/filter conversations
-GET  /api/dashboard/bookings         - list/filter bookings
+POST /api/voice/recording            - Twilio webhook, voicemail recording + transcription callback
 POST /api/stripe/checkout            - create checkout session (setup fee + subscription)
-POST /api/stripe/webhook             - handle Stripe events
-POST /api/notifications/send         - send SMS/email notification to owner
+POST /api/stripe/webhook             - handle Stripe events (idempotent via stripe_webhook_events)
+POST /api/stripe/portal              - open the Stripe customer billing portal
+POST /api/stripe/expire-grace        - CRON_SECRET-guarded daily sweep: past_due -> paused
+                                        once the grace window elapses
+POST /api/notifications/digest       - CRON_SECRET-guarded daily batched-activity summary
 ```
+
+Booking creation (design §9) is NOT its own route — it's an internal function
+call (`lib/booking/capture.ts`'s `createBooking`/`upsertLead`), invoked
+directly by the shared conversation engine (`lib/conversation/engine.ts`) that
+chat and voice both call. There is no network hop; "internal" here means
+same-process, not a second HTTP call.
+
+**Server Actions** (`app/dashboard/actions.ts`, called only from the
+dashboard's own forms/buttons, each re-checking auth and scoping writes by
+`business_id` even though they're reachable by direct POST):
+
+```
+updateBookingStatus(bookingId, status)     - update a booking's status (new/confirmed/owner_contacted/canceled)
+saveBusinessSettings(prevState, formData)  - services, pricing, area, hours, emergency policy, average job value
+saveNotificationPreferences(...)           - alert channels, owner_phone (for SMS), daily-digest opt-in
+submitCorrection(prevState, formData)      - owner submits a correction to AI knowledge
+```
+
+**Dashboard reads** — the pages that would otherwise be
+`GET /api/dashboard/summary|conversations|bookings` are Server Components that
+query Supabase directly (`app/dashboard/page.tsx`,
+`app/dashboard/conversations/page.tsx`, `app/dashboard/bookings/page.tsx`),
+scoped automatically by Row Level Security via the signed-in user's session —
+the same tenant-isolation guarantee a dedicated API would need to re-implement.
 
 ## 5. Component Structure (Next.js/React)
 

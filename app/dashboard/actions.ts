@@ -154,8 +154,12 @@ export async function saveBusinessSettings(
 }
 
 /**
- * Saves notification channel + digest preferences (design §12). Instant alerts
- * for bookings/emergencies are fixed policy and not stored here.
+ * Saves notification channel + digest preferences (design §12), plus the
+ * owner's mobile number for real SMS delivery (audit fix, item 2 —
+ * `lib/notifications/send.ts` falls back to email without one, but we still
+ * reject the save outright when SMS is selected with no usable number so the
+ * gap is caught here rather than discovered later as a silently-skipped text).
+ * Instant alerts for bookings/emergencies are fixed policy and not stored here.
  */
 export async function saveNotificationPreferences(
   _prev: ActionResult,
@@ -168,6 +172,15 @@ export async function saveNotificationPreferences(
   const channels = (["sms", "email"] as NotificationType[]).filter((c) =>
     selected.includes(c),
   );
+  const ownerPhone = textOrNull(formData.get("owner_phone"));
+
+  if (channels.includes("sms") && (!ownerPhone || ownerPhone.replace(/\D/g, "").length < 7)) {
+    return {
+      ok: false,
+      error: "Add a mobile number above so we have somewhere to text you.",
+    };
+  }
+
   const prefs: NotificationPreferences = {
     channels,
     daily_digest: formData.get("daily_digest") != null,
@@ -176,7 +189,7 @@ export async function saveNotificationPreferences(
   const supabase = await createClient();
   const { error } = await supabase
     .from("businesses")
-    .update({ notification_preferences: prefs })
+    .update({ notification_preferences: prefs, owner_phone: ownerPhone })
     .eq("id", context.business.id);
 
   if (error) return { ok: false, error: error.message };

@@ -1,3 +1,4 @@
+import { isUsablePhone } from "@/lib/booking/capture";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Business, NotificationType } from "@/lib/types/database";
 
@@ -16,7 +17,7 @@ import { dispatchEmail, dispatchSms } from "./adapters";
 export interface OwnerNotification {
   business: Pick<
     Business,
-    "id" | "owner_email" | "notification_preferences"
+    "id" | "owner_email" | "owner_phone" | "notification_preferences"
   >;
   /** Machine label stored on the log row, e.g. "billing_past_due". */
   reason: string;
@@ -38,20 +39,36 @@ export async function notifyOwner({
 
   for (const channel of channels) {
     let ok = false;
+    // The channel actually used — usually equal to `channel`, but "sms" with
+    // no phone on file falls back to email below. The log always records
+    // what really happened, never what was merely requested (audit fix,
+    // item 2: never silently claim "sent" when nothing was sent).
+    let effectiveChannel: NotificationType = channel;
+
     try {
-      ok =
-        channel === "sms"
-          ? // No owner mobile stored yet; the SMS adapter is a stub (see adapters.ts).
-            await dispatchSms({ to: business.owner_email, body })
-          : await dispatchEmail({ to: business.owner_email, subject, body });
+      if (channel === "sms" && !isUsablePhone(business.owner_phone)) {
+        effectiveChannel = "email";
+        ok = await dispatchEmail({
+          to: business.owner_email,
+          subject: `[No phone on file — texted instead] ${subject}`,
+          body,
+        });
+      } else if (channel === "sms") {
+        ok = await dispatchSms({ to: business.owner_phone as string, body });
+      } else {
+        ok = await dispatchEmail({ to: business.owner_email, subject, body });
+      }
     } catch (err) {
-      console.error(`[notify] ${channel} dispatch threw`, err);
+      console.error(
+        `[notify] ${channel} dispatch threw`,
+        err instanceof Error ? err.message : "unknown error",
+      );
       ok = false;
     }
 
     const { error } = await supabase.from("notifications_log").insert({
       business_id: business.id,
-      type: channel,
+      type: effectiveChannel,
       related_booking_id: null,
       status: ok ? "sent" : "failed",
       reason,

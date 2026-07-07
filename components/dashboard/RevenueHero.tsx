@@ -104,12 +104,12 @@ export function RevenueHero({
         <p className="mt-0.5 text-sm text-muted">
           {needsAvgValue ? (
             <>
-              {jobs} {jobs === 1 ? "job" : "jobs"} captured — add your average job
-              value to see this in dollars.
+              {jobs} {jobs === 1 ? "job" : "jobs"} captured this week — add your
+              average job value to see this in dollars.
             </>
           ) : (
             <>
-              {jobs} {jobs === 1 ? "job" : "jobs"} booked over the last 14 days
+              {jobs} {jobs === 1 ? "job" : "jobs"} booked this week (last 7 days)
             </>
           )}
         </p>

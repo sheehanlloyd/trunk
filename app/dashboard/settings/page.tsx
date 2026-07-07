@@ -34,7 +34,10 @@ export default async function SettingsPage() {
           phoneNumber={business.phone_number}
         />
         <SettingsForm business={business} />
-        <NotificationPreferencesForm prefs={business.notification_preferences} />
+        <NotificationPreferencesForm
+          prefs={business.notification_preferences}
+          ownerPhone={business.owner_phone}
+        />
       </div>
     </PageLayout>
   );

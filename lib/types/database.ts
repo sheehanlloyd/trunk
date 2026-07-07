@@ -57,6 +57,9 @@ export interface Business {
   id: string;
   name: string;
   owner_email: string;
+  /** Owner's mobile number for real SMS delivery (see 0011_owner_phone.sql).
+   *  Null until they fill it in on the Settings → Notifications page. */
+  owner_phone: string | null;
   phone_number: string | null;
   service_area: string | null;
   services: ServiceItem[];

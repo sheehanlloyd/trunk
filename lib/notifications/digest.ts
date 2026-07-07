@@ -55,7 +55,9 @@ function describeReason(reason: string, count: number): string {
         ? "a callback request"
         : reason === "out_of_area"
           ? "an out-of-area request"
-          : reason;
+          : reason === "engine_error"
+            ? "a conversation the AI couldn't finish answering"
+            : reason;
   // Naive pluralization is fine for this internal copy.
   return count === 1 ? label : `${count} ${label}s`;
 }
