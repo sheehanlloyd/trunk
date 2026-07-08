@@ -99,7 +99,9 @@ export async function extractDraft(site: CleanedSite): Promise<OnboardingDraft> 
 
   const response = await anthropic.messages.parse({
     model: CLAUDE_MODEL,
-    max_tokens: 2048,
+    // Claude 5: thinking is on by default and shares this budget with the
+    // output, so give extraction real headroom over the old 2048.
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [
       {
@@ -111,7 +113,9 @@ export async function extractDraft(site: CleanedSite): Promise<OnboardingDraft> 
       },
     ],
     output_config: { format: zodOutputFormat(ExtractionSchema) },
-  });
+    // Extraction isn't a live conversation — nobody is waiting in silence — so
+    // give it more than the client-wide 20s cap sized for chat/voice turns.
+  }, { timeout: 60_000 });
 
   const parsed = response.parsed_output;
   if (!parsed) {

@@ -182,12 +182,20 @@ export async function handleTurn(input: TurnInput): Promise<TurnResult> {
   // faster model and a tighter token budget to cut per-turn latency. Chat keeps
   // the larger model. (Phase 6 latency tradeoff.)
   const isVoice = input.channel === "voice";
+  // Claude 5 models think by default and thinking counts against max_tokens.
+  // Voice disables it outright — every second of silence on a phone call is
+  // dead air. Chat keeps adaptive thinking at low effort: a typing indicator
+  // absorbs the brief pause, and max_tokens is sized to fit thinking + reply.
   const response = await anthropic.messages.parse({
     model: isVoice ? VOICE_CLAUDE_MODEL : CLAUDE_MODEL,
-    max_tokens: isVoice ? 256 : 1024,
+    max_tokens: isVoice ? 512 : 4096,
+    thinking: isVoice ? { type: "disabled" } : { type: "adaptive" },
+    output_config: {
+      format: zodOutputFormat(TurnAnalysisSchema),
+      effort: "low",
+    },
     system: buildConversationSystemPrompt(business, input.channel, corrections),
     messages: toMessages(withUser),
-    output_config: { format: zodOutputFormat(TurnAnalysisSchema) },
   });
 
   const analysis = response.parsed_output;

@@ -5,8 +5,13 @@ import { serverEnv } from "@/lib/env";
 /**
  * The Claude model used across the platform. Centralized so chat (Phase 3) and
  * voice (Phase 6) stay consistent with onboarding extraction.
+ *
+ * Claude 5 note: on the 5-family models thinking is ON by default and counts
+ * against max_tokens, so every call site pairs the model with an explicit
+ * thinking/effort config (see engine.ts / extract.ts) instead of relying on
+ * 4.x-era defaults.
  */
-export const CLAUDE_MODEL = "claude-opus-4-6";
+export const CLAUDE_MODEL = "claude-opus-5";
 
 /**
  * Model for live phone turns (Phase 6). Voice is latency-sensitive — a caller is
@@ -17,7 +22,7 @@ export const CLAUDE_MODEL = "claude-opus-4-6";
  * NOTE: verify this id is enabled for your Anthropic account before real calls.
  */
 export const VOICE_CLAUDE_MODEL =
-  process.env.VOICE_CLAUDE_MODEL?.trim() || "claude-sonnet-4-6";
+  process.env.VOICE_CLAUDE_MODEL?.trim() || "claude-sonnet-5";
 
 /**
  * Hard cap on a single Claude call. Chat/voice callers already catch and fall
