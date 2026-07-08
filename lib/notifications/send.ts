@@ -16,7 +16,7 @@ import { dispatchEmail, dispatchSms } from "./adapters";
 export interface OwnerNotification {
   business: Pick<
     Business,
-    "id" | "owner_email" | "notification_preferences"
+    "id" | "owner_email" | "owner_phone" | "notification_preferences"
   >;
   /** Machine label stored on the log row, e.g. "billing_past_due". */
   reason: string;
@@ -41,8 +41,11 @@ export async function notifyOwner({
     try {
       ok =
         channel === "sms"
-          ? // No owner mobile stored yet; the SMS adapter is a stub (see adapters.ts).
-            await dispatchSms({ to: business.owner_email, body })
+          ? business.owner_phone
+            ? await dispatchSms({ to: business.owner_phone, body })
+            : // SMS opted in but no mobile on file yet — email instead of
+              // dropping the alert; Settings prompts the owner to add one.
+              await dispatchEmail({ to: business.owner_email, subject, body })
           : await dispatchEmail({ to: business.owner_email, subject, body });
     } catch (err) {
       console.error(`[notify] ${channel} dispatch threw`, err);

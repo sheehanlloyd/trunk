@@ -108,3 +108,28 @@ export const serverEnv = {
     return required("CRON_SECRET", process.env.CRON_SECRET);
   },
 } as const;
+
+/**
+ * Email delivery config (Resend). Optional by design: when RESEND_API_KEY is
+ * unset the email adapter logs instead of sending, so local dev and CI never
+ * need a provider account. `emailFrom` must be a sender on a domain verified
+ * in Resend once you go live.
+ */
+export function emailConfig(): { apiKey: string; from: string } | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    from: process.env.EMAIL_FROM?.trim() || "AI Receptionist <onboarding@resend.dev>",
+  };
+}
+
+/**
+ * Whether real SMS sending is enabled. SMS rides the same Twilio account as
+ * voice, but sending texts costs money per message — so it's opt-in via
+ * SMS_ENABLED=true rather than turning on silently the moment Twilio creds
+ * exist. When off, the SMS adapter logs instead of sending.
+ */
+export function smsEnabled(): boolean {
+  return process.env.SMS_ENABLED === "true";
+}
