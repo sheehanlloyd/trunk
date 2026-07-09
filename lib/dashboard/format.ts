@@ -99,3 +99,25 @@ export function deltaPct(series: number[]): number | null {
   if (prior === 0) return recent > 0 ? 100 : null;
   return Math.round(((recent - prior) / prior) * 100);
 }
+
+/**
+ * Human wording for a `leads.reason` value. The column is free-form text (see
+ * 0004_leads.sql), so unknown values fall back to a de-underscored, sentence-
+ * cased version rather than leaking a raw enum into owner-facing copy.
+ * Shared by the Leads page badges and the weekly report.
+ */
+export function leadReasonLabel(reason: string | null): string | null {
+  if (!reason) return null;
+  switch (reason) {
+    case "incomplete":
+      return "Dropped off mid-booking";
+    case "out_of_area":
+      return "Outside service area";
+    case "needs_callback":
+      return "Asked for a callback";
+    default: {
+      const words = reason.replaceAll("_", " ").trim();
+      return words.charAt(0).toUpperCase() + words.slice(1);
+    }
+  }
+}
