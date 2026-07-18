@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { CommandPalette } from "@/components/CommandPalette";
 import { NavBar } from "@/components/shared/NavBar";
 import { Card } from "@/components/shared/Card";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
     return (
       <div className="flex min-h-dvh items-center justify-center px-4">
         <Card className="max-w-md p-6 text-center">
-          <h1 className="text-lg font-semibold text-slate-900">
+          <h1 className="text-lg font-semibold text-ink-900">
             No business associated
           </h1>
           <p className="mt-2 text-sm text-muted">
@@ -42,7 +43,11 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <NavBar businessName={business.name} userEmail={membership.email} />
-      <main className="flex-1">{children}</main>
+      {/* Flat canvas. The wash that used to sit here was removed in the
+          editorial pass — space and hairlines carry the hierarchy now. */}
+      <main className="min-w-0 flex-1">{children}</main>
+      {/* ⌘K palette — global to the dashboard, renders nothing until opened. */}
+      <CommandPalette />
     </div>
   );
 }
