@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CopyTranscriptButton } from "@/components/dashboard/CopyTranscriptButton";
 import { CorrectAnswerButton } from "@/components/dashboard/CorrectAnswerButton";
+import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { Card } from "@/components/shared/Card";
 import { PageLayout } from "@/components/shared/PageLayout";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -11,7 +13,7 @@ import { formatDateTime } from "@/lib/dashboard/format";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation } from "@/lib/types/database";
 
-export const metadata: Metadata = { title: "Conversation — AI Receptionist" };
+export const metadata: Metadata = { title: "Conversation" };
 
 export default async function ConversationDetailPage({
   params,
@@ -39,6 +41,18 @@ export default async function ConversationDetailPage({
     conversation.customer_phone ??
     "Unknown caller";
 
+  // Plain-text transcript for the copy button, built server-side so the
+  // client component stays a dumb "write this string" button.
+  const transcriptText = [
+    `${context.business.name} — conversation with ${who}`,
+    formatDateTime(conversation.created_at),
+    "",
+    ...conversation.transcript.map(
+      (turn) =>
+        `${turn.role === "customer" ? "Customer" : "Receptionist"}: ${turn.text}`,
+    ),
+  ].join("\n");
+
   return (
     <PageLayout
       title={who}
@@ -47,6 +61,9 @@ export default async function ConversationDetailPage({
         <div className="flex items-center gap-2">
           {conversation.outcome ? (
             <StatusBadge status={conversation.outcome} />
+          ) : null}
+          {conversation.transcript.length > 0 ? (
+            <CopyTranscriptButton transcript={transcriptText} />
           ) : null}
           <Link
             href="/dashboard/conversations"
@@ -65,13 +82,18 @@ export default async function ConversationDetailPage({
         </div>
       ) : null}
 
+      <SummaryCard
+        conversationId={conversation.id}
+        summary={conversation.summary}
+      />
+
       {conversation.customer_phone ? (
         <Card className="mb-4 flex items-center justify-between p-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted">
               Customer phone
             </p>
-            <p className="mt-0.5 text-sm font-medium text-slate-900">
+            <p className="mt-0.5 text-sm font-medium text-ink-900">
               {conversation.customer_phone}
             </p>
           </div>
@@ -110,7 +132,7 @@ export default async function ConversationDetailPage({
                       className={
                         "rounded-2xl px-4 py-2.5 text-sm " +
                         (isCustomer
-                          ? "bg-slate-100 text-slate-900"
+                          ? "bg-ink-100 text-ink-900"
                           : "bg-brand-600 text-white")
                       }
                     >
