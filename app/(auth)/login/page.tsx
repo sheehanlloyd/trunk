@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export const metadata: Metadata = { title: "Sign in — AI Receptionist" };
+export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({
   searchParams,

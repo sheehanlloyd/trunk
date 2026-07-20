@@ -38,7 +38,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
   return (
     <Card className="p-6">
-      <h1 className="text-lg font-semibold text-slate-900">Sign in</h1>
+      <h1 className="text-lg font-semibold text-ink-900">Sign in</h1>
       <p className="mt-1 text-sm text-muted">
         Welcome back. Enter your credentials to continue.
       </p>
@@ -58,6 +58,15 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
           autoComplete="current-password"
           onChange={setPassword}
         />
+
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-brand-600 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {error ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -98,7 +107,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">
+      <span className="mb-1 block text-sm font-medium text-ink-700">
         {label}
       </span>
       <input
@@ -107,7 +116,7 @@ function Field({
         value={value}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       />
     </label>
   );
