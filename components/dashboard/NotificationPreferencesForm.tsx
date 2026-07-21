@@ -35,10 +35,10 @@ export function NotificationPreferencesForm({
       <CardBody>
         <form action={formAction} className="space-y-4">
           <fieldset>
-            <legend className="mb-2 text-sm font-medium text-slate-900">
+            <legend className="mb-2 text-sm font-medium text-ink-900">
               How should we reach you?
             </legend>
-            <label className="flex min-h-11 items-center gap-3 text-sm text-slate-900">
+            <label className="flex min-h-11 items-center gap-3 text-sm text-ink-900">
               <input
                 type="checkbox"
                 name="channels"
@@ -48,7 +48,7 @@ export function NotificationPreferencesForm({
               />
               Text me (SMS) — fastest on a job site
             </label>
-            <label className="flex min-h-11 items-center gap-3 text-sm text-slate-900">
+            <label className="flex min-h-11 items-center gap-3 text-sm text-ink-900">
               <input
                 type="checkbox"
                 name="channels"
@@ -60,7 +60,7 @@ export function NotificationPreferencesForm({
             </label>
           </fieldset>
 
-          <label className="flex min-h-11 items-center gap-3 border-t border-border pt-3 text-sm text-slate-900">
+          <label className="flex min-h-11 items-center gap-3 border-t border-border pt-3 text-sm text-ink-900">
             <input
               type="checkbox"
               name="daily_digest"
@@ -70,7 +70,7 @@ export function NotificationPreferencesForm({
             Send me a daily activity digest
           </label>
 
-          <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          <p className="rounded-lg bg-ink-50 p-3 text-sm text-ink-600">
             Bookings and emergencies always alert you instantly. Everything else
             is batched into your daily digest so you&apos;re not buzzed all day.
           </p>

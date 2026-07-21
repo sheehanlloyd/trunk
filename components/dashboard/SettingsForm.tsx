@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { saveBusinessSettings, type ActionResult } from "@/app/dashboard/actions";
 import { Button } from "@/components/shared/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/shared/Card";
+import { Field, Input, Select } from "@/components/shared/Input";
 import { centsToDollarsInput } from "@/lib/dashboard/format";
 import type { Business, ServiceItem } from "@/lib/types/database";
 
@@ -21,7 +22,7 @@ const DAYS: { key: string; label: string }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-900";
+  "w-full rounded-lg border border-border px-3 py-2 text-sm text-ink-900";
 
 /**
  * The owner's self-service control over what the AI knows (design §6/§11). One
@@ -60,7 +61,7 @@ export function SettingsForm({ business }: { business: Business }) {
         </CardHeader>
         <CardBody className="space-y-4">
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-900">
+            <span className="mb-1 block text-sm font-medium text-ink-900">
               Business name
             </span>
             <input
@@ -71,7 +72,7 @@ export function SettingsForm({ business }: { business: Business }) {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-900">
+            <span className="mb-1 block text-sm font-medium text-ink-900">
               Service area
             </span>
             <input
@@ -84,6 +85,55 @@ export function SettingsForm({ business }: { business: Business }) {
               Your AI tells customers outside this area you can&apos;t take the job.
             </span>
           </label>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact &amp; alerts</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <Field
+            label="Your mobile number"
+            hint="Where booking and emergency texts go."
+          >
+            <Input
+              name="owner_phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              defaultValue={business.owner_phone ?? ""}
+              placeholder="e.g. +1 512 555 0134"
+            />
+          </Field>
+          <Field
+            label="Review link"
+            hint="Your public review page (usually your Google review link). Used when you text happy customers a review request."
+          >
+            <Input
+              name="review_link"
+              type="url"
+              inputMode="url"
+              defaultValue={business.review_link ?? ""}
+              placeholder="https://g.page/r/…"
+            />
+          </Field>
+          <Field
+            label="How calls reach your AI"
+            hint="Forwarding keeps your existing number on trucks and ads — the AI only picks up when you don't."
+          >
+            <Select
+              name="call_routing_mode"
+              defaultValue={business.call_routing_mode}
+            >
+              <option value="direct">
+                Customers call the AI number directly
+              </option>
+              <option value="forward">
+                My existing number forwards to the AI after a few rings
+              </option>
+            </Select>
+          </Field>
         </CardBody>
       </Card>
 
@@ -159,7 +209,7 @@ export function SettingsForm({ business }: { business: Business }) {
         <CardBody className="space-y-3">
           {DAYS.map((d) => (
             <label key={d.key} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-sm font-medium text-slate-900">
+              <span className="w-24 shrink-0 text-sm font-medium text-ink-900">
                 {d.label}
               </span>
               <input
@@ -204,7 +254,7 @@ export function SettingsForm({ business }: { business: Business }) {
               captures each week.
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-medium text-slate-500">$</span>
+              <span className="text-lg font-medium text-ink-500">$</span>
               <input
                 name="average_job_value"
                 type="number"
