@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { EmergencyBanner } from "@/components/dashboard/EmergencyBanner";
+import { LiveRefresh } from "@/components/dashboard/LiveRefresh";
 import { RevenueHero } from "@/components/dashboard/RevenueHero";
+import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { Card } from "@/components/shared/Card";
 import { PageLayout } from "@/components/shared/PageLayout";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -16,13 +19,19 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation } from "@/lib/types/database";
 
-export const metadata: Metadata = { title: "Dashboard — AI Receptionist" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 /** Flagged = AI wasn't sure, or the request was unclear. These need a human look. */
 const ATTENTION_FILTER = "ai_confidence_flag.eq.true,outcome.eq.unclear";
 
 /** Trend window for the revenue hero. */
 const TREND_DAYS = 14;
+
+/** Rolling 24h (not "since midnight") — an emergency at 11pm must still be
+ *  visible the next morning. */
+function emergencyWindowStartISO(): string {
+  return new Date(Date.now() - 24 * 3_600_000).toISOString();
+}
 
 type FlaggedRow = Pick<
   Conversation,
@@ -44,6 +53,7 @@ export default async function DashboardOverviewPage() {
   const supabase = await createClient();
   const todayStart = startOfTodayISO();
   const trendStart = daysAgoISO(TREND_DAYS);
+  const emergencyWindowStart = emergencyWindowStartISO();
 
   // All queries below are automatically scoped to this tenant by RLS.
   const [
@@ -52,6 +62,12 @@ export default async function DashboardOverviewPage() {
     needsAttention,
     trendBookings,
     attentionList,
+    // Head-only counts (no rows transferred) feeding the setup checklist and
+    // the emergency banner — cheap enough to ride along on every page load.
+    anyConversation,
+    anyBooking,
+    teamMembers,
+    recentEmergencies,
   ] = await Promise.all([
     supabase
       .from("conversations")
@@ -80,10 +96,61 @@ export default async function DashboardOverviewPage() {
       .order("created_at", { ascending: false })
       .limit(5)
       .returns<FlaggedRow[]>(),
+    supabase
+      .from("conversations")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("bookings")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("business_users")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("conversations")
+      .select("*", { count: "exact", head: true })
+      .eq("outcome", "emergency_escalated")
+      .gte("created_at", emergencyWindowStart),
   ]);
 
   const attentionCount = needsAttention.count ?? 0;
   const flagged = attentionList.data ?? [];
+  const emergencyCount = recentEmergencies.count ?? 0;
+
+  // Setup steps, in the order an owner would naturally complete them. The
+  // business row came free with requireAuth(); the rest are the head counts
+  // above. "Widget installed" is proxied by any conversation existing — we
+  // can't see their site, but a first chat proves the embed is live.
+  const setupItems = [
+    {
+      label: "Add your average job value",
+      done: business.average_job_value_cents != null,
+      href: "/dashboard/settings",
+    },
+    {
+      label: "Add your mobile for SMS alerts",
+      done: business.owner_phone != null,
+      href: "/dashboard/settings",
+    },
+    {
+      label: "Add your review link",
+      done: business.review_link != null,
+      href: "/dashboard/settings",
+    },
+    {
+      label: "Install the chat widget",
+      done: (anyConversation.count ?? 0) > 0,
+      href: "/dashboard/settings",
+    },
+    {
+      label: "First booking captured",
+      done: (anyBooking.count ?? 0) > 0,
+    },
+    {
+      label: "Invite a teammate",
+      done: (teamMembers.count ?? 0) > 1,
+      href: "/dashboard/settings",
+    },
+  ];
 
   const avgDollars =
     business.average_job_value_cents != null
@@ -105,8 +172,17 @@ export default async function DashboardOverviewPage() {
     <PageLayout
       title="Dashboard"
       description="Your AI receptionist activity at a glance."
-      actions={<StatusBadge status={business.status} />}
+      actions={
+        <div className="flex items-center gap-2">
+          <LiveRefresh />
+          <StatusBadge status={business.status} />
+        </div>
+      }
     >
+      {/* Emergencies outrank everything, then remaining setup, then the money. */}
+      <EmergencyBanner count={emergencyCount} />
+      <SetupChecklist items={setupItems} />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
         <RevenueHero
           amount={Math.round(weekRevenue)}
@@ -165,7 +241,7 @@ export default async function DashboardOverviewPage() {
                   className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-ink-50"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                    <p className="truncate text-sm font-medium text-ink-900">
                       {c.customer_name ?? c.customer_phone ?? "Unknown caller"}
                     </p>
                     <p className="mt-0.5 text-xs text-muted">
