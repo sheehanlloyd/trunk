@@ -9,19 +9,24 @@ import { formatDateTime, startOfTodayISO } from "@/lib/dashboard/format";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, ConversationOutcome } from "@/lib/types/database";
 
-export const metadata: Metadata = { title: "Conversations — AI Receptionist" };
+export const metadata: Metadata = { title: "Conversations" };
 
 const ATTENTION_FILTER = "ai_confidence_flag.eq.true,outcome.eq.unclear";
 
-/** Outcome dropdown options; "attention" is a pseudo-filter for flagged chats. */
-const OUTCOME_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "All outcomes" },
-  { value: "attention", label: "Needs attention" },
+/**
+ * Outcome filter chips. "flagged" and "attention" are pseudo-values (they
+ * filter on ai_confidence_flag, not outcome); "attention" survives from the
+ * old dropdown so bookmarked URLs keep working, but the chip row shows
+ * "Flagged" (flag only) instead.
+ */
+const OUTCOME_CHIPS: { value: string; label: string }[] = [
+  { value: "all", label: "All" },
   { value: "booked", label: "Booked" },
   { value: "no_action", label: "No action" },
   { value: "unclear", label: "Unclear" },
   { value: "emergency_escalated", label: "Emergency" },
   { value: "voicemail_left", label: "Voicemail" },
+  { value: "flagged", label: "Flagged" },
 ];
 
 const RANGE_OPTIONS: { value: string; label: string }[] = [
@@ -54,6 +59,7 @@ type ConversationRow = Pick<
   | "outcome"
   | "ai_confidence_flag"
   | "channel"
+  | "summary"
   | "created_at"
 >;
 
@@ -81,7 +87,7 @@ export default async function ConversationsPage({
   let query = supabase
     .from("conversations")
     .select(
-      "id, customer_name, customer_phone, outcome, ai_confidence_flag, channel, created_at",
+      "id, customer_name, customer_phone, outcome, ai_confidence_flag, channel, summary, created_at",
     )
     .order("created_at", { ascending: false })
     // Fetch one extra row to detect whether there's more beyond this page,
@@ -90,6 +96,8 @@ export default async function ConversationsPage({
 
   if (outcome === "attention") {
     query = query.or(ATTENTION_FILTER);
+  } else if (outcome === "flagged") {
+    query = query.eq("ai_confidence_flag", true);
   } else if (REAL_OUTCOMES.includes(outcome as ConversationOutcome)) {
     query = query.eq("outcome", outcome);
   }
@@ -111,28 +119,48 @@ export default async function ConversationsPage({
       title="Conversations"
       description="Every chat and call your AI has handled."
     >
-      {/* Plain GET form so filtering works even before JS loads. */}
+      {/* Outcome chips: plain links, so filtering works even before JS loads.
+          Switching chips drops `limit` to reset the "Load more" pagination. */}
+      <nav aria-label="Filter by outcome" className="mb-3 -mx-1 overflow-x-auto">
+        <ul className="flex items-center gap-2 px-1 pb-1">
+          {OUTCOME_CHIPS.map((chip) => {
+            const active = chip.value === outcome;
+            const chipParams = new URLSearchParams();
+            if (chip.value !== "all") chipParams.set("outcome", chip.value);
+            if (range !== "all") chipParams.set("range", range);
+            const qs = chipParams.toString();
+            return (
+              <li key={chip.value} className="shrink-0">
+                <Link
+                  href={`/dashboard/conversations${qs ? `?${qs}` : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    "inline-flex rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors " +
+                    (active
+                      ? "bg-brand-600 text-white"
+                      : "border border-border bg-surface text-ink-700 hover:bg-ink-50")
+                  }
+                >
+                  {chip.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Plain GET form so the date filter works even before JS loads. The
+          hidden input keeps the active outcome chip when applying a range. */}
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
-          Outcome
-          <select
-            name="outcome"
-            defaultValue={outcome}
-            className="h-11 min-w-40 rounded-lg border border-border bg-white px-3 text-sm text-slate-900"
-          >
-            {OUTCOME_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {outcome !== "all" ? (
+          <input type="hidden" name="outcome" value={outcome} />
+        ) : null}
         <label className="flex flex-col gap-1 text-xs font-medium text-muted">
           Date
           <select
             name="range"
             defaultValue={range}
-            className="h-11 min-w-40 rounded-lg border border-border bg-white px-3 text-sm text-slate-900"
+            className="h-11 min-w-40 rounded-lg border border-border bg-white px-3 text-sm text-ink-900"
           >
             {RANGE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -165,20 +193,25 @@ export default async function ConversationsPage({
                   <Link
                     href={`/dashboard/conversations/${c.id}`}
                     className={
-                      "flex items-center justify-between gap-3 px-4 py-4 hover:bg-slate-50 sm:px-5 " +
+                      "flex items-center justify-between gap-3 px-4 py-4 hover:bg-ink-50 sm:px-5 " +
                       (flagged
                         ? "border-l-4 border-amber-400"
                         : "border-l-4 border-transparent")
                     }
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-ink-900">
                         {c.customer_name ?? c.customer_phone ?? "Unknown caller"}
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
                         {c.channel === "voice" ? "Call" : "Chat"} ·{" "}
                         {formatDateTime(c.created_at)}
                       </p>
+                      {c.summary ? (
+                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">
+                          {c.summary}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       {c.ai_confidence_flag ? (
@@ -200,7 +233,7 @@ export default async function ConversationsPage({
         <div className="mt-4 flex justify-center">
           <Link
             href={`/dashboard/conversations?${loadMoreParams.toString()}`}
-            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
+            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-ink-900 hover:bg-ink-50"
           >
             Load more
           </Link>
