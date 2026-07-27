@@ -1,14 +1,15 @@
 import { publicEnv } from "@/lib/env";
 
 /**
- * Placeholder shown to a new client until real Twilio provisioning lands in
- * Phase 6. Kept as a constant so the UI and API agree on the wording.
+ * Placeholder shown when Twilio number provisioning fails or hasn't run —
+ * the business goes live phone-less and the operator retries later. Kept as a
+ * constant so the UI and API agree on the wording.
  */
 export const PHONE_NUMBER_PLACEHOLDER = "Pending — assigned when you go live";
 
 /**
- * Generates the chat-widget embed snippet a client pastes into their site. The
- * widget script itself ships in Phase 3; this only wires the business id so the
+ * Generates the chat-widget embed snippet a client pastes into their site
+ * (the loader itself is public/widget.js). Only wires the business id so the
  * loaded widget knows which tenant it represents. Data-driven by `businessId`,
  * so it's identical for every client.
  */

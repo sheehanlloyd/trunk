@@ -24,7 +24,44 @@ interface Message {
 interface WidgetChatProps {
   businessId: string;
   businessName: string;
+  /** Owner-chosen accent hex (validated server-side); brand tokens when unset. */
+  accentColor?: string;
+  /** Owner-written first message; falls back to the stock greeting. */
+  greeting?: string;
+  /** Which corner the loader should anchor the iframe to; default right. */
+  position?: "right" | "left";
+  /** Owner opt-in: show a greeting teaser card beside the collapsed launcher. */
+  teaser?: boolean;
 }
+
+/**
+ * Once the visitor has dismissed the teaser — or opened the chat at all — we
+ * stay quiet for the rest of the tab session. sessionStorage can throw inside
+ * sandboxed iframes, so every touch is guarded; storage failure = show nothing
+ * fancy, never crash the widget.
+ */
+const TEASER_SEEN_KEY = "air-widget-teaser-seen";
+
+function teaserSeen(): boolean {
+  try {
+    return window.sessionStorage.getItem(TEASER_SEEN_KEY) === "1";
+  } catch {
+    // Storage unavailable (sandboxed iframe / privacy mode): treat as seen so
+    // the teaser can't re-appear on every navigation with no way to silence it.
+    return true;
+  }
+}
+
+function markTeaserSeen() {
+  try {
+    window.sessionStorage.setItem(TEASER_SEEN_KEY, "1");
+  } catch {
+    // Best effort only.
+  }
+}
+
+/** How long the visitor browses before the teaser slides in. */
+const TEASER_DELAY_MS = 5000;
 
 /** Message the loader listens for to resize the iframe. */
 function notifyParent(action: "open" | "close") {
@@ -35,8 +72,47 @@ function notifyParent(action: "open" | "close") {
   }
 }
 
-export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
+/**
+ * Tells the loader (public/widget.js) which corner the owner chose. The loader
+ * can't read our config itself — the frame is the only party that saw the DB —
+ * so we announce it once on mount and it applies the left/right CSS.
+ */
+function notifyParentConfig(position: "right" | "left") {
+  try {
+    window.parent?.postMessage(
+      { source: "air-widget", type: "config", position },
+      "*",
+    );
+  } catch {
+    // Cross-origin parent without a listener — safe to ignore.
+  }
+}
+
+/**
+ * Tells the loader the teaser card just appeared/disappeared so it can grow
+ * the collapsed iframe to fit and shrink it back on dismiss.
+ */
+function notifyParentTeaser(visible: boolean) {
+  try {
+    window.parent?.postMessage(
+      { source: "air-widget", type: "teaser", visible },
+      "*",
+    );
+  } catch {
+    // Cross-origin parent without a listener — safe to ignore.
+  }
+}
+
+export function WidgetChat({
+  businessId,
+  businessName,
+  accentColor,
+  greeting: customGreeting,
+  position = "right",
+  teaser = false,
+}: WidgetChatProps) {
   const [open, setOpen] = useState(false);
+  const [teaserVisible, setTeaserVisible] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -44,15 +120,46 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const greeting = `Hi! Thanks for reaching out to ${businessName}. How can I help you today?`;
+  const greeting =
+    customGreeting?.trim() ||
+    `Hi! Thanks for reaching out to ${businessName}. How can I help you today?`;
+
+  /** Inline accent override; undefined keeps the token classes as-is. */
+  const accentStyle = accentColor ? { backgroundColor: accentColor } : undefined;
+
+  // Announce the configured corner to the loader once per mount.
+  useEffect(() => {
+    notifyParentConfig(position);
+  }, [position]);
+
+  // Owner-enabled teaser: after a short browse, surface the greeting next to
+  // the launcher — but only while collapsed, and never again once the visitor
+  // has opened the chat or dismissed the card this session.
+  useEffect(() => {
+    if (!teaser || open || teaserSeen()) return;
+    const timer = window.setTimeout(() => {
+      setTeaserVisible(true);
+      notifyParentTeaser(true);
+    }, TEASER_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [teaser, open]);
+
+  const hideTeaser = useCallback(() => {
+    markTeaserSeen();
+    setTeaserVisible(false);
+    notifyParentTeaser(false);
+  }, []);
 
   const openPanel = useCallback(() => {
+    // Opening counts as "seen": shrink the loader's collapsed size back down
+    // so closing later returns to the bare bubble.
+    hideTeaser();
     setOpen(true);
     notifyParent("open");
     setMessages((prev) =>
       prev.length === 0 ? [{ role: "assistant", text: greeting }] : prev,
     );
-  }, [greeting]);
+  }, [greeting, hideTeaser]);
 
   const closePanel = useCallback(() => {
     setOpen(false);
@@ -98,13 +205,40 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
   }
 
   if (!open) {
+    const alignEnd = position === "left" ? "items-start" : "items-end";
     return (
-      <div className="flex h-dvh w-full items-end justify-end p-3">
+      <div
+        className={
+          "flex h-dvh w-full flex-col justify-end gap-2 p-3 " + alignEnd
+        }
+      >
+        {teaserVisible ? (
+          <div className="msg-in relative max-w-[220px]">
+            <button
+              type="button"
+              onClick={openPanel}
+              className="block w-full rounded-xl border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-left shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            >
+              <span className="line-clamp-2 text-sm leading-snug text-ink-800">
+                {greeting}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={hideTeaser}
+              aria-label="Dismiss message preview"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--color-border)] bg-white text-ink-500 shadow hover:text-ink-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            >
+              <TeaserCloseIcon />
+            </button>
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={openPanel}
           aria-label="Open chat"
           className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+          style={accentStyle}
         >
           <ChatIcon />
         </button>
@@ -115,7 +249,10 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-[var(--color-surface)] shadow-2xl sm:rounded-2xl sm:border sm:border-[var(--color-border)]">
       {/* Header */}
-      <div className="flex items-center justify-between bg-brand-600 px-4 py-3 text-white">
+      <div
+        className="flex items-center justify-between bg-brand-600 px-4 py-3 text-white"
+        style={accentStyle}
+      >
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden
@@ -151,7 +288,12 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
         className="flex-1 space-y-3 overflow-y-auto bg-[var(--color-background)] px-4 py-4"
       >
         {messages.map((m, i) => (
-          <MessageBubble key={i} role={m.role} text={m.text} />
+          <MessageBubble
+            key={i}
+            role={m.role}
+            text={m.text}
+            accentColor={accentColor}
+          />
         ))}
         {loading && <TypingIndicator />}
         {error && (
@@ -173,13 +315,14 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message…"
           aria-label="Message"
-          className="min-w-0 flex-1 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="min-w-0 flex-1 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
         <button
           type="submit"
           disabled={!input.trim() || loading}
           aria-label="Send message"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          style={accentStyle}
         >
           <SendIcon />
         </button>
@@ -188,7 +331,11 @@ export function WidgetChat({ businessId, businessName }: WidgetChatProps) {
   );
 }
 
-function MessageBubble({ role, text }: Message) {
+function MessageBubble({
+  role,
+  text,
+  accentColor,
+}: Message & { accentColor?: string }) {
   const isCustomer = role === "customer";
   return (
     <div className={isCustomer ? "flex justify-end" : "flex justify-start"}>
@@ -197,8 +344,10 @@ function MessageBubble({ role, text }: Message) {
           "max-w-[80%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm " +
           (isCustomer
             ? "bg-brand-600 text-white"
-            : "border border-[var(--color-border)] bg-[var(--color-surface)] text-slate-800")
+            : "border border-[var(--color-border)] bg-[var(--color-surface)] text-ink-800")
         }
+        // Customer bubbles share the accent so a custom color feels cohesive.
+        style={isCustomer && accentColor ? { backgroundColor: accentColor } : undefined}
       >
         {text}
       </div>
@@ -221,7 +370,7 @@ function TypingIndicator() {
 function Dot({ delay }: { delay: string }) {
   return (
     <span
-      className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"
+      className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-400"
       style={{ animationDelay: delay }}
     />
   );
@@ -233,6 +382,19 @@ function ChatIcon() {
       <path
         d="M12 3c5 0 9 3.4 9 7.5S17 18 12 18c-1 0-2-.1-2.9-.4L4 19l1.2-3.3C3.8 14.4 3 12.6 3 10.5 3 6.4 7 3 12 3Z"
         fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function TeaserCloseIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="m6 6 12 12M18 6 6 18"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
     </svg>
   );

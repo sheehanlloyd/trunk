@@ -76,18 +76,40 @@
 
   var open = false;
 
+  // Which corner the widget anchors to. The owner's choice lives in the DB;
+  // the frame (the only party that read it) announces it via a
+  // {type:"config"} postMessage after load. Default matches the stock look.
+  var position = "right";
+
+  // Whether the frame is currently showing its greeting teaser card next to
+  // the collapsed launcher. The teaser needs more room than the bare bubble,
+  // so the frame announces show/hide via {type:"teaser"} and we grow/shrink
+  // the collapsed iframe to match. Never affects the open panel size.
+  var teaserVisible = false;
+
   function isMobile() {
     return window.innerWidth < 480;
+  }
+
+  /** Pins the iframe to the configured bottom corner. */
+  function applyCorner() {
+    if (position === "left") {
+      iframe.style.left = "16px";
+      iframe.style.right = "auto";
+    } else {
+      iframe.style.right = "16px";
+      iframe.style.left = "auto";
+    }
   }
 
   function applyCollapsed() {
     open = false;
     iframe.style.top = "auto";
-    iframe.style.left = "auto";
-    iframe.style.right = "16px";
+    applyCorner();
     iframe.style.bottom = "16px";
-    iframe.style.width = "110px";
-    iframe.style.height = "110px";
+    // Bubble-only by default; wide enough for the teaser card when shown.
+    iframe.style.width = teaserVisible ? "268px" : "110px";
+    iframe.style.height = teaserVisible ? "200px" : "110px";
     iframe.style.borderRadius = "0";
   }
 
@@ -103,8 +125,7 @@
       iframe.style.height = "100%";
     } else {
       iframe.style.top = "auto";
-      iframe.style.left = "auto";
-      iframe.style.right = "16px";
+      applyCorner();
       iframe.style.bottom = "16px";
       iframe.style.width = Math.min(400, window.innerWidth - 32) + "px";
       iframe.style.height = Math.min(640, window.innerHeight - 32) + "px";
@@ -121,12 +142,28 @@
   }
   mount();
 
-  // --- Listen for open/close from the in-iframe UI ----------------------------
+  // --- Listen for open/close + config from the in-iframe UI -------------------
   window.addEventListener("message", function (event) {
     if (event.origin !== origin) return; // only trust our own frame
     if (event.source !== iframe.contentWindow) return;
     var data = event.data;
     if (!data || data.source !== "air-widget") return;
+    if (data.type === "config") {
+      // Owner-configured corner, announced by the frame once it has rendered.
+      if (data.position === "left" || data.position === "right") {
+        position = data.position;
+        if (open) applyOpen();
+        else applyCollapsed();
+      }
+      return;
+    }
+    if (data.type === "teaser") {
+      // Strict boolean only — anything else from a compromised frame is ignored.
+      if (data.visible !== true && data.visible !== false) return;
+      teaserVisible = data.visible;
+      if (!open) applyCollapsed();
+      return;
+    }
     if (data.action === "open") applyOpen();
     else if (data.action === "close") applyCollapsed();
   });

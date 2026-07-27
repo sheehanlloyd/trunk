@@ -1,7 +1,7 @@
 import { WidgetChat } from "@/components/chat/WidgetChat";
 import { isPaused } from "@/lib/billing/status";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { BusinessStatus } from "@/lib/types/database";
+import type { BusinessStatus, WidgetConfig } from "@/lib/types/database";
 
 /**
  * The chat widget's iframe document. `public/widget.js` embeds this route on a
@@ -20,6 +20,7 @@ interface WidgetBusiness {
   name: string;
   status: BusinessStatus;
   grace_period_ends_at: string | null;
+  widget_config: WidgetConfig | null;
 }
 
 async function loadBusiness(businessId: string): Promise<WidgetBusiness | null> {
@@ -28,7 +29,7 @@ async function loadBusiness(businessId: string): Promise<WidgetBusiness | null> 
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("name, status, grace_period_ends_at")
+      .select("name, status, grace_period_ends_at, widget_config")
       .eq("id", businessId)
       .maybeSingle<WidgetBusiness>();
     return data ?? null;
@@ -36,6 +37,34 @@ async function loadBusiness(businessId: string): Promise<WidgetBusiness | null> 
     console.error("[widget/frame] failed to load business", err);
     return null;
   }
+}
+
+/**
+ * Re-validates the stored widget_config at render time. saveWidgetConfig
+ * already only writes clean values, but this frame is public and the column is
+ * plain jsonb — a bad value must degrade to the stock widget, never reach an
+ * inline style or the postMessage channel.
+ */
+function sanitizeWidgetConfig(raw: WidgetConfig | null): WidgetConfig {
+  const config: WidgetConfig = {};
+  if (!raw || typeof raw !== "object") return config;
+  if (
+    typeof raw.accent_color === "string" &&
+    /^#[0-9a-fA-F]{6}$/.test(raw.accent_color)
+  ) {
+    config.accent_color = raw.accent_color;
+  }
+  if (typeof raw.greeting === "string" && raw.greeting.trim()) {
+    config.greeting = raw.greeting.trim().slice(0, 200);
+  }
+  if (raw.position === "left" || raw.position === "right") {
+    config.position = raw.position;
+  }
+  // Strict boolean — truthy strings from tampered jsonb must not enable it.
+  if (raw.teaser === true) {
+    config.teaser = true;
+  }
+  return config;
 }
 
 export default async function WidgetFramePage({
@@ -75,7 +104,7 @@ export default async function WidgetFramePage({
       <>
         <style>{transparentStyle}</style>
         <div className="flex h-dvh w-full items-end justify-end p-3">
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 shadow">
+          <div className="rounded-lg bg-ink-50 px-3 py-2 text-xs text-ink-600 shadow">
             This chat is temporarily unavailable. Please check back soon.
           </div>
         </div>
@@ -83,10 +112,19 @@ export default async function WidgetFramePage({
     );
   }
 
+  const config = sanitizeWidgetConfig(business.widget_config);
+
   return (
     <>
       <style>{transparentStyle}</style>
-      <WidgetChat businessId={businessId.trim()} businessName={business.name} />
+      <WidgetChat
+        businessId={businessId.trim()}
+        businessName={business.name}
+        accentColor={config.accent_color}
+        greeting={config.greeting}
+        position={config.position}
+        teaser={config.teaser}
+      />
     </>
   );
 }
