@@ -69,9 +69,9 @@ export async function POST(request: Request) {
   // caller) and per-business (catches distributed abuse of one widget/business,
   // and bounds the LLM/DB cost any one tenant's endpoint can run up).
   const ip = clientIp(request);
-  const ipLimit = rateLimit(`chat:ip:${ip}`, 20, 60_000);
+  const ipLimit = await rateLimit(`chat:ip:${ip}`, 20, 60_000);
   if (!ipLimit.allowed) return tooManyRequests(ipLimit.retryAfterSeconds, CORS_HEADERS);
-  const businessLimit = rateLimit(`chat:business:${businessId}`, 60, 60_000);
+  const businessLimit = await rateLimit(`chat:business:${businessId}`, 60, 60_000);
   if (!businessLimit.allowed) {
     return tooManyRequests(businessLimit.retryAfterSeconds, CORS_HEADERS);
   }

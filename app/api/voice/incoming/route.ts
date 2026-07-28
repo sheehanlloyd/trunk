@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   // across all Twilio customers), so per-IP limiting isn't meaningful here —
   // scope by the resolved business, once known. Twilio expects TwiML, not
   // JSON, so a throttled call still gets a valid (if terse) voice response.
-  const limit = rateLimit(`voice:incoming:${business.id}`, 30, 60_000);
+  const limit = await rateLimit(`voice:incoming:${business.id}`, 30, 60_000);
   if (!limit.allowed) {
     return twimlResponse(
       sayAndHangupTwiml("We're getting a high volume of calls right now. Please try again shortly."),

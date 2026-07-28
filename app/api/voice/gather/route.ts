@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   // Per-business: each Claude turn costs money, and a call can loop through
   // many gather turns, so cap turns per business per minute across all calls.
-  const limit = rateLimit(`voice:gather:${businessId}`, 60, 60_000);
+  const limit = await rateLimit(`voice:gather:${businessId}`, 60, 60_000);
   if (!limit.allowed) {
     return twimlResponse(
       sayAndHangupTwiml("We're getting a high volume of calls right now. Please try again shortly."),

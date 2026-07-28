@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   // Each call does an outbound fetch of an arbitrary URL plus an LLM
   // extraction pass — cap how fast one operator can run those up.
-  const limit = rateLimit(`onboarding:scrape:${operator.email}`, 10, 60_000);
+  const limit = await rateLimit(`onboarding:scrape:${operator.email}`, 10, 60_000);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many scrape requests — please wait a moment and try again." },
