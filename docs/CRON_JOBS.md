@@ -1,7 +1,7 @@
 # Scheduled jobs (cron)
 
-The platform has two scheduled endpoints. Both are plain HTTP POSTs guarded by a
-shared secret, so any scheduler works (Vercel Cron, a Supabase scheduled
+The platform has three scheduled endpoints. All are plain HTTP POSTs guarded by
+a shared secret, so any scheduler works (Vercel Cron, a Supabase scheduled
 function, GitHub Actions, or an external cron hitting the deployed URL).
 
 Set `CRON_SECRET` to a strong random string and send it on every call:
@@ -16,6 +16,42 @@ A missing/wrong secret returns `401`.
 |----------|---------|---------|
 | `POST /api/stripe/expire-grace` | daily | Billing §10: move `past_due` businesses whose grace window elapsed to `paused`. |
 | `POST /api/notifications/digest` | daily | Design §12: send each opted-in business one daily activity summary. |
+| `POST /api/insights/weekly` | weekly | Generate a fresh AI insights report for every serving business. |
+
+## Weekly AI insights — `POST /api/insights/weekly`
+
+Insights used to exist only behind the "Generate insights" button on the
+analytics page, which meant the owners who never found the button never got a
+report. This job generates one on a schedule so the report is simply waiting for
+them.
+
+Behavior:
+
+- Only businesses with status `trial`, `active`, or `past_due` are considered —
+  a `paused` or `canceled` line isn't serving customers, so it gets no report.
+- A business whose newest report is younger than **6 days** is skipped. Six
+  rather than seven because schedulers drift; a 7-day threshold would make every
+  other week's run silently skip the tenant it was meant to serve. This also
+  makes the job safe to re-run: a double-fire costs nothing in tokens.
+- Businesses with fewer than 5 conversations in the last 30 days are skipped —
+  there is nothing worth paying a model to summarize.
+- Each run is bounded: at most **12** businesses, **4** at a time. The response
+  includes `remaining` (and the server logs a warning) when the cap truncates a
+  sweep, so a partial run is visible rather than looking complete. If you
+  regularly see `remaining > 0`, run the job more often — the 6-day skip means
+  extra runs are nearly free.
+
+Response shape:
+
+```json
+{ "generated": 3, "skippedRecent": 8, "skippedNoData": 1, "failed": 0, "remaining": 0 }
+```
+
+One tenant's failure never fails the sweep; failures are counted and logged with
+the business name.
+
+Suggested cadence: Monday early morning, so the report reflects a full week and
+is waiting when owners check in.
 
 ## Daily activity digest — `POST /api/notifications/digest`
 
@@ -61,9 +97,11 @@ reads best as "yesterday's summary."
 (Vercel Cron sends the secret via a configured header; for other schedulers add
 the `Authorization: Bearer <CRON_SECRET>` header yourself.)
 
-## Note: notification delivery is still stubbed
+## Note: notification delivery is opt-in
 
-The digest (like every other alert) goes through `lib/notifications/adapters.ts`,
-which currently logs to the server console instead of sending a real email/SMS.
-See `docs/STRIPE_GOLIVE.md` §7 for the drop-in to go live. Until then the digest
-is fully wired and logged, but nothing leaves the server.
+The digest (like every other alert) goes through `lib/notifications/adapters.ts`.
+Delivery is real but gated by env: email sends via Resend once `RESEND_API_KEY`
+(+ `EMAIL_FROM`) is set, and SMS sends via Twilio once `SMS_ENABLED=true` and the
+owner has a mobile number saved in Settings. With neither configured, adapters
+log to the server console — everything is still wired and recorded in
+`notifications_log`, but nothing leaves the box. See `docs/STRIPE_GOLIVE.md` §7.
