@@ -94,7 +94,7 @@ export default async function AdminClientsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
         Clients
       </h1>
       <p className="mt-1 text-sm text-muted">
@@ -106,7 +106,7 @@ export default async function AdminClientsPage() {
         {STATUS_ORDER.filter((s) => counts[s]).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
             <StatusBadge status={s} />
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-700">
               {counts[s]}
             </span>
           </span>
@@ -134,7 +134,7 @@ export default async function AdminClientsPage() {
                 key={c.id}
                 className="border-b border-border last:border-0"
               >
-                <td className="px-4 py-3 font-medium text-slate-900">
+                <td className="px-4 py-3 font-medium text-ink-900">
                   {c.name}
                 </td>
                 <td className="px-4 py-3 text-muted">
@@ -143,14 +143,14 @@ export default async function AdminClientsPage() {
                 <td className="px-4 py-3">
                   <StatusBadge status={c.status} />
                 </td>
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-ink-700">
                   {c.stripe_subscription_id
                     ? (renewals.get(c.stripe_subscription_id) &&
                         formatDate(renewals.get(c.stripe_subscription_id)!)) ||
                       "—"
                     : "No subscription"}
                 </td>
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-ink-700">
                   {c.status === "past_due" && c.grace_period_ends_at
                     ? formatDate(c.grace_period_ends_at)
                     : "—"}

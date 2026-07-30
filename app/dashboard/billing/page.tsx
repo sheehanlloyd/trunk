@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { requireAuth } from "@/lib/auth/session";
 import { formatDate } from "@/lib/dashboard/format";
 
-export const metadata: Metadata = { title: "Billing — AI Receptionist" };
+export const metadata: Metadata = { title: "Billing" };
 
 interface SubscriptionInfo {
   nextRenewal: string | null;
@@ -86,7 +86,7 @@ export default async function BillingPage({
       <Card className="p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-700">
+            <p className="text-sm font-medium text-ink-700">
               Subscription status
             </p>
             <p className="mt-1 text-sm text-muted">
@@ -102,7 +102,7 @@ export default async function BillingPage({
               <dt className="text-xs font-medium uppercase tracking-wide text-muted">
                 {subscription.cancelAtPeriodEnd ? "Access ends" : "Next renewal"}
               </dt>
-              <dd className="mt-1 text-sm text-slate-900">
+              <dd className="mt-1 text-sm text-ink-900">
                 {subscription.nextRenewal
                   ? formatDate(subscription.nextRenewal)
                   : "—"}
@@ -113,7 +113,7 @@ export default async function BillingPage({
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted">
                   Auto-renew
                 </dt>
-                <dd className="mt-1 text-sm text-slate-900">
+                <dd className="mt-1 text-sm text-ink-900">
                   Off — cancels at period end
                 </dd>
               </div>
@@ -153,7 +153,7 @@ function Banner({
     success: "border-accent-200 bg-accent-50 text-accent-700",
     warning: "border-amber-300 bg-amber-50 text-amber-800",
     danger: "border-red-300 bg-red-50 text-red-700",
-    neutral: "border-border bg-slate-50 text-slate-700",
+    neutral: "border-border bg-ink-50 text-ink-700",
   };
   return (
     <div className={`mb-4 rounded-lg border px-4 py-3 text-sm ${styles[tone]}`}>

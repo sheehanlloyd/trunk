@@ -23,14 +23,14 @@ export default async function AdminLayout({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-brand-700">
-              AI Receptionist
+              Trunk
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-600">
               Operator
             </span>
           </div>
           <nav className="flex items-center gap-4 text-sm">
-            <Link href="/onboarding" className="text-slate-600 hover:text-slate-900">
+            <Link href="/onboarding" className="text-ink-600 hover:text-ink-900">
               Onboarding
             </Link>
             <span className="text-muted">{operator.email}</span>

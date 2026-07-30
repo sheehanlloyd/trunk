@@ -65,28 +65,16 @@ export function RevenueHero({
 
   return (
     <section
-      className="rise-in relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-hero sm:p-7"
+      className="rise-in relative rounded-card border border-border bg-surface p-6 sm:p-7"
       aria-label="Revenue captured this week"
     >
-      {/* faint revenue wash, top-right — depth without a flashy gradient identity */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
-        style={{
-          background:
-            "radial-gradient(closest-side, var(--color-revenue-50), transparent)",
-        }}
-      />
-
       <div className="relative flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium uppercase tracking-wide text-revenue-700">
-            Captured this week
-          </p>
+          <p className="text-[13px] font-medium text-muted">Captured this week</p>
           {deltaPct != null ? (
             <span
               className={
-                "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold " +
+                "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11.5px] font-medium " +
                 (deltaPct >= 0
                   ? "bg-revenue-50 text-revenue-700"
                   : "bg-copper-50 text-copper-700")
@@ -97,7 +85,9 @@ export function RevenueHero({
           ) : null}
         </div>
 
-        <p className="font-display text-5xl font-bold text-brand-800 sm:text-6xl">
+        {/* The one number on the page that is allowed to be green, because it
+            is the only one that is literally money. */}
+        <p className="font-display text-5xl font-semibold text-revenue-700 sm:text-6xl">
           {needsAvgValue ? "$0" : dollars.format(shown)}
         </p>
 

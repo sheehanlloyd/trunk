@@ -197,7 +197,7 @@ function Steps({ step }: { step: Step }) {
             "rounded-full px-3 py-1 text-xs font-medium " +
             (i <= activeIndex
               ? "bg-brand-600 text-white"
-              : "bg-slate-100 text-slate-500")
+              : "bg-ink-100 text-ink-500")
           }
         >
           {item.label}
@@ -223,7 +223,7 @@ function UrlStep({
 }) {
   return (
     <Card className="max-w-2xl p-6">
-      <h2 className="text-base font-semibold text-slate-900">
+      <h2 className="text-base font-semibold text-ink-900">
         Prospect website
       </h2>
       <p className="mt-1 text-sm text-muted">
@@ -239,7 +239,7 @@ function UrlStep({
           onKeyDown={(e) => {
             if (e.key === "Enter" && url.trim() && !loading) onScrape();
           }}
-          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
         <Button
           onClick={onScrape}
@@ -304,7 +304,7 @@ function ReviewStep({
     <div className="max-w-3xl space-y-4">
       <p className="text-sm text-muted">
         Draft from{" "}
-        <span className="font-medium text-slate-700">{sourceUrl}</span>. Review
+        <span className="font-medium text-ink-700">{sourceUrl}</span>. Review
         and correct everything below — this is what the AI will know.
       </p>
 
@@ -434,7 +434,7 @@ function ReviewStep({
           onChange={(e) => update({ emergencyPolicy: e.target.value })}
           rows={3}
           placeholder="e.g. 24/7 emergency line for burst pipes; otherwise take a message."
-          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
       </Card>
 
@@ -474,7 +474,7 @@ function DoneStep({
         <h2 className="text-base font-semibold text-accent-700">
           {businessName || "Business"} created
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-ink-600">
           The tenant is live in trial status. Share the embed code and invite the
           owner to set their password.
         </p>
@@ -482,7 +482,7 @@ function DoneStep({
 
       <Card className="p-6">
         <SectionTitle>Embed code</SectionTitle>
-        <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
+        <pre className="overflow-x-auto rounded-lg bg-ink-900 p-4 text-xs text-ink-100">
           {result.embedCode}
         </pre>
         <Button
@@ -501,7 +501,7 @@ function DoneStep({
 
       <Card className="p-6">
         <SectionTitle>Phone number</SectionTitle>
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-ink-700">
           {result.phoneNumber ?? result.phoneNumberPlaceholder}
         </p>
         <p className="mt-1 text-xs text-muted">
@@ -551,7 +551,7 @@ function TextField({
 }) {
   return (
     <label className={"block " + (className ?? "")}>
-      <span className="mb-1 block text-sm font-medium text-slate-700">
+      <span className="mb-1 block text-sm font-medium text-ink-700">
         {label}
         {required && <span className="text-red-600"> *</span>}
       </span>
@@ -560,7 +560,7 @@ function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={
-          "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-brand-100 " +
+          "w-full rounded-lg border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-brand-100 " +
           (invalid
             ? "border-red-400 focus:border-red-400"
             : "border-border focus:border-brand-500")
@@ -586,7 +586,7 @@ function BareInput({
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
     />
   );
 }

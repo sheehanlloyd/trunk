@@ -6,7 +6,7 @@ import { getOperator } from "@/lib/auth/operator";
 import { OnboardingClient } from "./OnboardingClient";
 
 export const metadata: Metadata = {
-  title: "Onboard a business — AI Receptionist",
+  title: "Onboard a business",
 };
 
 /**

@@ -41,7 +41,7 @@ export function CorrectionForm({
       {originalContent !== undefined ? (
         <>
           <input type="hidden" name="original_content" value={originalContent} />
-          <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          <div className="rounded-lg bg-ink-50 p-3 text-sm text-ink-600">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted">
               What the AI said
             </span>
@@ -50,20 +50,20 @@ export function CorrectionForm({
         </>
       ) : (
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-900">
+          <span className="mb-1 block text-sm font-medium text-ink-900">
             What did the AI get wrong? <span className="text-muted">(optional)</span>
           </span>
           <textarea
             name="original_content"
             rows={2}
             placeholder="e.g. It quoted $50 for a drain cleaning"
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-ink-900"
           />
         </label>
       )}
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-900">
+        <span className="mb-1 block text-sm font-medium text-ink-900">
           What should it say instead?
         </span>
         <textarea
@@ -71,7 +71,7 @@ export function CorrectionForm({
           rows={3}
           required
           placeholder="e.g. Drain cleaning starts at $150. Never quote below that."
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-slate-900"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-ink-900"
         />
       </label>
 

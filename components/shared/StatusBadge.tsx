@@ -7,12 +7,16 @@ import type {
 
 type Tone = "neutral" | "info" | "success" | "warning" | "danger";
 
+/* Squared badges with a hairline border rather than rounded pills — the pill
+   is the single most template-looking element in SaaS UI, and a 4px rectangle
+   reads as a technical label instead of a sticker. `info` is deliberately
+   colorless: only money, attention, and danger earn a hue. */
 const toneStyles: Record<Tone, string> = {
-  neutral: "bg-ink-100 text-ink-700",
-  info: "bg-brand-50 text-brand-700",
-  success: "bg-revenue-50 text-revenue-700",
-  warning: "bg-copper-50 text-copper-700",
-  danger: "bg-red-50 text-red-700",
+  neutral: "bg-ink-50 text-ink-600 border border-ink-200",
+  info: "bg-ink-50 text-ink-700 border border-ink-200",
+  success: "bg-revenue-50 text-revenue-700 border border-revenue-100",
+  warning: "bg-copper-50 text-copper-700 border border-copper-100",
+  danger: "bg-red-50 text-red-700 border border-red-100",
 };
 
 /** Every known status value maps to a { label, tone }. Single source of truth. */
@@ -45,7 +49,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded px-2 py-0.5 text-[11.5px] font-medium",
         toneStyles[entry.tone],
         className,
       )}

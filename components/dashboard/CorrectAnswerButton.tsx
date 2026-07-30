@@ -46,7 +46,7 @@ export function CorrectAnswerButton({ answer }: { answer: string }) {
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="mt-2 text-xs font-medium text-muted hover:text-slate-700"
+        className="mt-2 text-xs font-medium text-muted hover:text-ink-700"
       >
         Cancel
       </button>

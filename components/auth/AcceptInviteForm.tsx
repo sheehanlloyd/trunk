@@ -57,7 +57,7 @@ export function AcceptInviteForm() {
 
   return (
     <Card className="p-6">
-      <h1 className="text-lg font-semibold text-slate-900">
+      <h1 className="text-lg font-semibold text-ink-900">
         Set up your account
       </h1>
       <p className="mt-1 text-sm text-muted">
@@ -66,7 +66,7 @@ export function AcceptInviteForm() {
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">
+          <span className="mb-1 block text-sm font-medium text-ink-700">
             Email
           </span>
           <input
@@ -75,11 +75,11 @@ export function AcceptInviteForm() {
             value={email}
             autoComplete="email"
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-slate-700">
+          <span className="mb-1 block text-sm font-medium text-ink-700">
             Create password
           </span>
           <input
@@ -88,7 +88,7 @@ export function AcceptInviteForm() {
             value={password}
             autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
         </label>
 

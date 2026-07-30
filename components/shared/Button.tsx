@@ -11,24 +11,31 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
+/* Small radius, medium weight, no shadow, no gloss. A button here is a solid
+   rectangle of ink with a label on it — the crispness is the character. The
+   only motion is a 1px press, which is transform-only so it never reflows. */
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium " +
-  "transition-colors focus-visible:outline-none focus-visible:ring-2 " +
-  "focus-visible:ring-brand-500 focus-visible:ring-offset-2 " +
-  "disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-md font-medium " +
+  "transition-[background-color,border-color,color] duration-150 " +
+  "active:translate-y-px " +
+  "focus-visible:outline-none focus-visible:ring-2 " +
+  "focus-visible:ring-ink-900/25 focus-visible:ring-offset-2 " +
+  "disabled:pointer-events-none disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700",
+  // Dark fills lift on hover rather than deepening — there is nothing darker
+  // than near-black to go to.
+  primary: "bg-ink-900 text-[#fefefe] hover:bg-brand-700",
   secondary:
-    "bg-white text-slate-800 border border-border hover:bg-slate-50",
-  ghost: "bg-transparent text-slate-700 hover:bg-slate-100",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+    "bg-surface text-ink-800 border border-border hover:border-ink-900 hover:text-ink-900",
+  ghost: "bg-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+  danger: "bg-red-700 text-[#fefefe] hover:bg-red-800",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-base",
+  sm: "h-8 px-3 text-[13px]",
+  md: "h-9 px-4 text-sm",
+  lg: "h-10.5 px-5 text-[15px]",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

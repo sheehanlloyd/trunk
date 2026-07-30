@@ -37,7 +37,7 @@ export function InstallCard({ embedCode, phoneNumber }: InstallCardProps) {
       <CardBody className="space-y-5">
         <div>
           <div className="mb-1 flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-900">
+            <span className="text-sm font-medium text-ink-900">
               Website chat widget
             </span>
             <button
@@ -61,7 +61,7 @@ export function InstallCard({ embedCode, phoneNumber }: InstallCardProps) {
         </div>
 
         <div className="border-t border-border pt-4">
-          <span className="text-sm font-medium text-slate-900">
+          <span className="text-sm font-medium text-ink-900">
             Your AI&apos;s phone number
           </span>
           {phoneNumber ? (
