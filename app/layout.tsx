@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,18 +12,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Industrial grotesk for headings and metrics — nods to trade signage and gives
-// the big revenue numbers real presence. Body stays on Geist.
-const archivo = Archivo({
-  variable: "--font-archivo",
+// High-contrast serif, used ONLY for marketing display type (.font-editorial).
+// It ships a single 400 weight by design — at hero sizes a serif this sharp
+// needs no bolding, and the restraint is the point. The product UI is Geist
+// throughout, so this never loads inside the dashboard's critical path.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400"],
 });
 
 export const metadata: Metadata = {
-  title: "AI Receptionist",
+  title: {
+    default: "Trunk — AI receptionist for the trades",
+    template: "%s · Trunk",
+  },
   description:
-    "AI receptionist for HVAC, plumbing, and electrical companies — never miss a call or booking.",
+    "Trunk answers your calls and website chats 24/7, books the job, and texts you the details — built for HVAC, plumbing, and electrical companies.",
+  openGraph: {
+    title: "Trunk — AI receptionist for the trades",
+    description:
+      "Answers your calls and website chats 24/7, books the job, and texts you the details.",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Trunk — your phones, answered. Every time." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trunk — AI receptionist for the trades",
+    description:
+      "Answers your calls and website chats 24/7, books the job, and texts you the details.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

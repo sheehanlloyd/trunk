@@ -1,46 +1,59 @@
 @import "tailwindcss";
 
 /*
- * Design tokens for the AI Receptionist dashboard.
+ * Trunk design system — editorial minimalism.
  *
- * Identity is grounded in the trades' own world — steel + water (a deep petrol
- * blue), copper pipe/wiring (a warm accent), and blueprint grays — rather than
- * default framework blue. Saturation is spent in one place: revenue green, used
- * only for money and positive outcomes. Calm and trustworthy per DESIGN.md §13,
- * elevated through a chosen palette, a real type pairing, and considered depth.
- * Light-first, mobile-responsive. Registering scales in @theme exposes utilities
- * like bg-brand-600, text-revenue-600, shadow-card, etc.
+ * The rule: the interface is warm black, off-white, and gray. Color is not
+ * decoration, it is information. Emerald means money, copper means attention,
+ * red means danger, and nothing else is permitted to be colorful. No
+ * gradients. No drop shadows on cards. Depth is one hairline border;
+ * hierarchy is type weight and whitespace, nothing else.
+ *
+ * The black is warm (#171513) rather than blue-black — that's what keeps a
+ * monochrome page from feeling cold and generic, and it's the single most
+ * important value in this file. Surfaces are off-white (#fefefe), never the
+ * pure #ffffff that makes screens glare.
+ *
+ * Type does the expressive work: a high-contrast serif at regular weight for
+ * marketing display (.font-editorial), and a single grotesk at weight 500–600
+ * for the entire product UI. Headings are tracked tight and NOT heavy —
+ * weight 800 everywhere is the loudest tell of a template.
+ *
+ * The `brand-*` ramp is deliberately neutral. It keeps its name so every
+ * existing component compiles unchanged, but it renders as warm near-black
+ * for fills and warm gray for tints.
  */
 @theme {
-  /* Brand — deep petrol/ink blue: buttons, links, active nav.
-     Steel + water: trustworthy, industrial, not stock #2563eb. */
-  --color-brand-50: #eef5f7;
-  --color-brand-100: #d6e6ea;
-  --color-brand-200: #aecdd5;
-  --color-brand-300: #7dabb7;
-  --color-brand-400: #4d8794;
-  --color-brand-500: #2a6b7a;
-  --color-brand-600: #0e4c5e;
-  --color-brand-700: #0b3d4c;
-  --color-brand-800: #0a323d;
-  --color-brand-900: #082832;
+  /* Brand — warm neutral. 600 is the near-black for primary buttons and
+     active states; 700 is its hover, lighter, because dark buttons should
+     lift rather than deepen. 50/100 are the quiet tints for active nav rows. */
+  --color-brand-50: #f5f4f3;
+  --color-brand-100: #eae8e6;
+  --color-brand-200: #d8d5d1;
+  --color-brand-300: #b5b0aa;
+  --color-brand-400: #837d75;
+  --color-brand-500: #4d4842;
+  --color-brand-600: #171513;
+  --color-brand-700: #2e2b27;
+  --color-brand-800: #171513;
+  --color-brand-900: #171513;
+  --color-brand-950: #100e0d;
 
-  /* Revenue — emerald: the ONE saturated accent, reserved for money &
-     positive status. This is what "worth $199/mo" looks like on screen. */
-  --color-revenue-50: #e9f6f0;
-  --color-revenue-100: #cfece0;
-  --color-revenue-200: #a3dcc4;
-  --color-revenue-500: #12996d;
-  --color-revenue-600: #0a7a57;
-  --color-revenue-700: #086046;
+  /* Revenue — emerald. The ONE saturated accent, reserved for money and
+     positive outcomes. This is what "worth $199/mo" looks like on screen. */
+  --color-revenue-50: #ecfdf5;
+  --color-revenue-100: #d1fae5;
+  --color-revenue-200: #a7f3d0;
+  --color-revenue-500: #10b981;
+  --color-revenue-600: #059669;
+  --color-revenue-700: #047857;
 
-  /* Copper — warm accent (pipe/wiring): attention & emphasis. Replaces amber;
-     subject-specific warmth against the cool brand, not the AI terracotta trope. */
-  --color-copper-50: #f9f0e9;
-  --color-copper-100: #f1dccb;
-  --color-copper-200: #e3bd9d;
-  --color-copper-600: #b5713f;
-  --color-copper-700: #8f5730;
+  /* Copper — warm accent (pipe/wiring): attention, warnings, emphasis. */
+  --color-copper-50: #fdf4ec;
+  --color-copper-100: #f8e3d0;
+  --color-copper-200: #eec5a1;
+  --color-copper-600: #c17537;
+  --color-copper-700: #9a5a29;
 
   /* Accent alias kept so any lingering accent-* utilities resolve to revenue. */
   --color-accent-50: var(--color-revenue-50);
@@ -50,35 +63,48 @@
   --color-accent-600: var(--color-revenue-600);
   --color-accent-700: var(--color-revenue-700);
 
-  /* Blueprint neutrals — cool grays biased toward the brand, not pure slate. */
-  --color-ink-50: #f2f5f6;
-  --color-ink-100: #e4eaec;
-  --color-ink-200: #cdd7db;
-  --color-ink-300: #a7b6bc;
-  --color-ink-400: #74868d;
-  --color-ink-500: #566970;
-  --color-ink-600: #41525a;
-  --color-ink-700: #33424a;
-  --color-ink-800: #222e34;
-  --color-ink-900: #16202a;
+  /* Neutrals — warm grays derived from the same black, so nothing on the page
+     is ever colder than the ink. */
+  --color-ink-50: #f7f6f5;
+  --color-ink-100: #efedeb;
+  --color-ink-200: #e4e1dd;
+  --color-ink-300: #cac5bf;
+  --color-ink-400: #9d968d;
+  --color-ink-500: #6e675f;
+  --color-ink-600: #524c45;
+  --color-ink-700: #3d3833;
+  --color-ink-800: #29251f;
+  --color-ink-900: #171513;
 
   /* Semantic surfaces */
-  --color-background: #f6f8f9;   /* app canvas — faint cool tint */
-  --color-surface: #ffffff;      /* cards, panels */
-  --color-foreground: #16202a;   /* ink-900 */
-  --color-muted: #566970;        /* ink-500 — clears AA on white (4.5:1+) */
-  --color-border: #dbe3e6;       /* cool blueprint hairline */
+  --color-paper: #fefefe;        /* the off-white used ON dark surfaces */
+  --color-background: #fbfaf9;   /* app canvas — warm paper */
+  --color-surface: #fefefe;      /* cards, panels — never pure white */
+  --color-foreground: #171513;   /* warm near-black */
+  --color-muted: #6e675f;        /* ink-500 — clears AA on the canvas */
+  --color-border: #e7e4e0;       /* the hairline that replaces every shadow */
+  --color-border-strong: #d5d1cb;
 
-  /* Considered elevation scale — replaces a single flat shadow. */
-  --shadow-card: 0 1px 2px rgb(16 32 42 / 0.04), 0 1px 3px rgb(16 32 42 / 0.06);
-  --shadow-raised: 0 2px 4px rgb(16 32 42 / 0.05), 0 6px 16px rgb(16 32 42 / 0.08);
-  --shadow-hero: 0 1px 2px rgb(10 122 87 / 0.06), 0 12px 32px rgb(14 76 94 / 0.10);
+  /* Elevation. Cards get NONE of this — a border is the whole treatment.
+     These exist only for things that genuinely float above the page: the
+     command palette, the widget teaser, mobile menus. */
+  --shadow-xs: none;
+  --shadow-card: none;
+  --shadow-hero: none;
+  --shadow-raised: 0 1px 2px rgb(23 21 19 / 0.06), 0 8px 24px rgb(23 21 19 / 0.10);
+  --shadow-pop: 0 2px 4px rgb(23 21 19 / 0.06), 0 20px 48px rgb(23 21 19 / 0.16);
+
+  /* Radii — small and crisp. Big radii are friendly; small radii are precise,
+     and precision is what this look is selling. */
+  --radius-card: 8px;
+  --radius-panel: 10px;
 
   /* Fonts — wired to the next/font variables set on <html> in layout.tsx.
-     --font-display drives headings & metrics (Archivo), --font-sans the body
-     (Geist). Both fall back to system-ui so a font load never blocks text. */
+     --font-editorial is the high-contrast serif used for marketing display
+     only; the product UI is one grotesk, everywhere, no exceptions. */
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-archivo), var(--font-geist-sans), system-ui, sans-serif;
+  --font-display: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-editorial: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -87,13 +113,81 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Metrics & display headings use the industrial grotesk with lined-up digits. */
+/* Product UI headings & metrics: the one grotesk, lined-up digits, tight
+   tracking. The negative tracking is what separates "designed" from "default". */
 .font-display {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.022em;
+}
+
+/* Larger display type wants proportionally tighter tracking. */
+.font-display.text-2xl,
+.font-display.text-3xl { letter-spacing: -0.03em; }
+.font-display.text-4xl,
+.font-display.text-5xl,
+.font-display.text-6xl { letter-spacing: -0.036em; }
+
+/*
+ * Marketing display — the high-contrast serif, set at regular weight and
+ * tracked in hard. Weight 400 is deliberate: at this size a serif needs no
+ * help, and bolding it would undo the elegance that makes it worth using.
+ * Restricted to the landing page; the product UI never uses it.
+ */
+.font-editorial {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+/* Consistent, modern focus treatment across every interactive element —
+   a soft brand ring instead of the browser default outline. */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-800);
+}
+
+/* Slim, unobtrusive scrollbars (WebKit) — the default macOS bars look heavy
+   inside dense panels like the nav rail and transcript viewer. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-200) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-200);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-ink-300); }
+
+/* ---------------------------------------------------------------------------
+ * Surfaces.
+ *
+ * There are deliberately no gradient utilities in this file. Every surface is
+ * a flat fill; if something needs to separate from its neighbour it gets a
+ * border or space, not a wash. `.app-canvas`, `.panel-glow`, `.panel-revenue`
+ * and `.text-gradient-brand` were removed in the editorial pass — if you find
+ * a stray reference, delete it rather than reinstating them.
+ * ------------------------------------------------------------------------- */
+
+/* The alternating light band used to separate marketing sections without
+   drawing a line across the page. */
+.band {
+  background-color: #f2f1ef;
 }
 
 /* Sparkline draw-in: the line strokes on, the endpoint dot pops after. */
@@ -123,13 +217,89 @@ body {
   to { opacity: 1; transform: none; }
 }
 
+/* ---------------------------------------------------------------------------
+ * Marketing page (/) — bespoke motion + texture.
+ * Everything degrades to a static, fully-readable page under reduced motion.
+ * ------------------------------------------------------------------------- */
+
+/* Blueprint grid — the trades texture behind the dark hero. Two hairline
+ * gradients make the grid; the radial glow lifts the center like a worklight. */
+/* Kept as a no-op hook: the dark sections are now a flat fill. The former
+   radial glow was the loudest gradient on the site and the first thing that
+   made the page read as generated rather than designed. */
+.bp-grid {
+  background-image: none;
+}
+
+/* Scroll-reveal: Reveal.tsx flips .reveal → .reveal-in when the element
+ * enters the viewport. Transform + opacity only, so it never causes layout. */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Gentle drift for the hero's floating notification cards. */
+.float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+.float-slower {
+  animation: float-slow 9s ease-in-out 1.2s infinite;
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Typing indicator dots inside the scripted hero demo. */
+.type-dot {
+  animation: type-dot 1.1s ease-in-out infinite;
+}
+@keyframes type-dot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* Message entrance inside the scripted hero demo. */
+.msg-in {
+  animation: msg-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Soft pulse for the "live" dot in the hero demo header. */
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(18 153 109 / 0.5); }
+  50% { box-shadow: 0 0 0 6px rgb(18 153 109 / 0); }
+}
+
 /* Motion is a flourish, never a dependency: honor the OS setting. */
 @media (prefers-reduced-motion: reduce) {
   .spark-animate .spark-line,
   .spark-animate .spark-dot,
-  .rise-in {
+  .rise-in,
+  .float-slow,
+  .float-slower,
+  .type-dot,
+  .msg-in,
+  .pulse-dot {
     animation: none;
   }
   .spark-animate .spark-line { stroke-dashoffset: 0; }
   .spark-animate .spark-dot { opacity: 1; }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Trunk mark: warm-black tile, geometric T, and the little "answering"
+       dot that echoes the live-status dot in the widget header. The dot is
+       the only color in the identity, and it is the same emerald that means
+       money everywhere else in the product. -->
+  <rect width="64" height="64" rx="8" fill="#171513"/>
+  <rect x="14" y="16" width="36" height="8.5" rx="1.5" fill="#fefefe"/>
+  <rect x="27.75" y="16" width="8.5" height="32" rx="1.5" fill="#fefefe"/>
+  <circle cx="45.5" cy="45.5" r="4.5" fill="#12996d"/>
+</svg>
