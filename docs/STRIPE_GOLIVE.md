@@ -49,15 +49,14 @@ The past_due → paused transition is done by a sweep endpoint, not automaticall
 - `NEXT_PUBLIC_APP_URL=https://<your-domain>` so Checkout/portal success and
   cancel redirects point at production.
 
-## 7. Notifications (currently stubbed)
-Owner past_due/paused alerts are recorded in `notifications_log` and logged to
-the server console via dev adapters. To actually deliver:
-- **Email:** implement the `dispatchEmail` drop-in in
-  `lib/notifications/adapters.ts` (e.g. Resend) and add its API key to env.
-- **SMS:** add an `owner_phone` column (+ a Settings field to collect it) and
-  implement `dispatchSms` via the Twilio REST API (`serverEnv.twilio` is already
-  configured). Pass the owner mobile instead of `owner_email` in
-  `lib/notifications/send.ts`.
+## 7. Notifications (env-gated, already implemented)
+Owner past_due/paused alerts are recorded in `notifications_log` and delivered
+by the real adapters in `lib/notifications/adapters.ts`. To turn delivery on:
+- **Email:** set `RESEND_API_KEY` and `EMAIL_FROM` (a sender on a domain
+  verified in Resend). Unset = logs to console.
+- **SMS:** set `SMS_ENABLED=true` (rides the existing Twilio creds) and make
+  sure the owner saved a mobile number in Settings → Contact & alerts. Without
+  a number, SMS alerts fall back to email automatically.
 
 ## 8. Smoke test in live mode
 - Run one real (or Stripe test-clock) subscription through Checkout → confirm the

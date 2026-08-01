@@ -49,12 +49,11 @@ verification is automated and green.
 
 ## ⚠️ Before onboarding a real paying client — do these by hand
 
-1. **Turn on real notification delivery — this is the top blocker.**
-   `lib/notifications/adapters.ts` is still a **dev stub**: every alert (bookings,
-   emergencies, voicemails, digests, billing) is only `console.info`'d — nothing
-   reaches the owner today. Wire up email (Resend/SendGrid) and SMS (Twilio +
-   an `owner_phone` column/Settings field). Everything upstream is done and logged;
-   this is a drop-in at two marked spots.
+1. **Flip on real notification delivery.** The adapters in
+   `lib/notifications/adapters.ts` are implemented (Resend for email, Twilio
+   REST for SMS) but env-gated so dev/CI never sends: set `RESEND_API_KEY` +
+   `EMAIL_FROM`, set `SMS_ENABLED=true`, and have the owner save their mobile
+   in Settings → Contact & alerts. Verify one real email and one real text.
 2. **Place a real Twilio phone call** and speak a real emergency ("I smell gas").
    The evals prove the *model* logic, not the live TTS/STT + TwiML round-trip.
    Confirm the caller hears the emergency reply and the owner gets the alert.
